@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import type { ModuleMenuItem } from '@/modules/types'
+import { getVisibleWorkbenchMenus } from '@/modules/registry'
 import { usePageRefresh } from '@/hooks/usePageRefresh'
 import { fetchUserInfo } from '@/services/auth'
 import { useUserStore } from '@/store'
+import { useSiteConfigStore } from '@/store/site'
 import { useTokenStore } from '@/store/token'
-import type { WorkbenchMenuItem } from './workbench-menu'
-import { getVisibleWorkbenchMenus } from './workbench-menu'
 
 defineOptions({
   name: 'Home',
@@ -21,8 +22,10 @@ definePage({
 
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
+const siteStore = useSiteConfigStore()
 const { userInfo } = storeToRefs(userStore)
-const displayName = computed(() => userInfo.value.nickname || userInfo.value.username || '开发者')
+const { siteTitle } = storeToRefs(siteStore)
+const displayName = computed(() => userInfo.value.nickname || userInfo.value.username || '用户')
 
 // 下拉刷新：重新拉取当前登录用户信息（未登录时忽略）
 usePageRefresh(async () => {
@@ -46,7 +49,7 @@ const featureItems = [
 const recentRecords = [
   { type: '框架', title: 'Vue 3 + TypeScript', meta: '组合式 API · 类型安全', tone: 'blue' },
   { type: '样式', title: 'UnoCSS + Wot UI', meta: '原子化样式 · 跨端组件', tone: 'green' },
-  { type: '工具', title: 'Vitest + ESLint', meta: '测试与代码质量检查', tone: 'red' },
+  { type: '质量', title: 'ESLint + TypeScript', meta: '代码规范 · 类型检查', tone: 'red' },
 ]
 
 const quickToneClasses: Record<string, string> = {
@@ -68,7 +71,7 @@ const recentToneClasses: Record<string, string> = {
   blue: 'bg-#165DFF',
 }
 
-function handleQuickAction(action: WorkbenchMenuItem) {
+function handleQuickAction(action: ModuleMenuItem) {
   uni.navigateTo({ url: action.route })
 }
 </script>
@@ -77,9 +80,9 @@ function handleQuickAction(action: WorkbenchMenuItem) {
   <view class="p-32rpx">
     <view class="flex items-center justify-between">
       <view>
-        <text class="block text-22rpx text-#86909C tracking-2rpx">seewis-single-uni</text>
+        <text class="block text-22rpx text-#86909C tracking-2rpx">{{ siteTitle }}</text>
         <text class="mt-10rpx block text-42rpx text-#1D2129 font-bold leading-tight">欢迎使用，{{ displayName }}</text>
-        <text class="mt-10rpx block text-24rpx text-#4E5969">从页面、组件到请求，快速搭建多端小程序</text>
+        <text class="mt-10rpx block text-24rpx text-#4E5969">业务入口、扫码与个人中心统一在这里</text>
       </view>
       <view class="h-80rpx w-80rpx flex items-center justify-center border-6rpx border-#D6E4FF rounded-full bg-#165DFF text-30rpx text-white font-bold">
         <text>{{ displayName.slice(0, 1) }}</text>
@@ -90,8 +93,8 @@ function handleQuickAction(action: WorkbenchMenuItem) {
       <text class="pointer-events-none absolute z-0 text-330rpx text-white/5 font-bold leading-none -right-28rpx -top-78rpx -rotate-8">S</text>
       <view class="relative z-1 flex items-start justify-between">
         <view>
-          <text class="block text-22rpx text-white/60">模板状态</text>
-          <text class="mt-8rpx block text-32rpx font-bold">开发环境就绪</text>
+          <text class="block text-22rpx text-white/60">服务状态</text>
+          <text class="mt-8rpx block text-32rpx font-bold">已连接后端</text>
         </view>
         <view class="flex items-center border border-white/18 rounded-full bg-white/8 px-14rpx py-8rpx text-22rpx text-white">
           <view class="mr-8rpx h-12rpx w-12rpx rounded-full bg-#00B42A" />
@@ -115,8 +118,8 @@ function handleQuickAction(action: WorkbenchMenuItem) {
     </view>
 
     <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">示例模块</text>
-      <text class="text-22rpx text-#86909c">按需替换为你的业务</text>
+      <text class="text-30rpx text-#1d2129 font-bold">业务模块</text>
+      <text class="text-22rpx text-#86909c">按角色与权限展示</text>
     </view>
     <view class="grid grid-cols-3 gap-16rpx">
       <view
@@ -137,8 +140,8 @@ function handleQuickAction(action: WorkbenchMenuItem) {
     </view>
 
     <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">模板能力</text>
-      <text class="text-22rpx text-#86909c">开箱即用</text>
+      <text class="text-30rpx text-#1d2129 font-bold">平台能力</text>
+      <text class="text-22rpx text-#86909c">统一底座</text>
     </view>
     <view class="overflow-hidden border border-#f2f3f5 rounded-16px bg-white">
       <view
@@ -196,8 +199,8 @@ function handleQuickAction(action: WorkbenchMenuItem) {
     </view>
 
     <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">开发提示</text>
-      <text class="text-22rpx text-#86909c">示例数据</text>
+      <text class="text-30rpx text-#1d2129 font-bold">使用提示</text>
+      <text class="text-22rpx text-#86909c">平台能力</text>
     </view>
     <view class="overflow-hidden border border-#f2f3f5 rounded-16px bg-white">
       <view

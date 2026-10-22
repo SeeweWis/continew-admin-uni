@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { RequisitionOrder, RequisitionStatus } from '../../mock'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { usePageRefresh } from '@/hooks/usePageRefresh'
-import { useScroll } from '@/hooks/useScroll'
+import { computed, ref, watch } from 'vue'
+import PageScaffold from '@/components/page/page-scaffold.vue'
+import { useListPage } from '@/hooks/useListPage'
 import { debounce } from '@/utils/debounce'
 import { ORDERS, REQUISITION_STATUS } from '../../mock'
 
@@ -43,7 +43,7 @@ async function fetchOrders(page: number, pageSize: number): Promise<RequisitionO
   return filtered.slice(start, start + pageSize)
 }
 
-const { list, loading, finished, refresh, loadMore } = useScroll<RequisitionOrder>({ fetchData: fetchOrders })
+const { list, loading, finished, error, refresh } = useListPage<RequisitionOrder>({ fetchData: fetchOrders })
 
 /** 首次查询完成后才展示空态，避免加载中闪空 */
 const ready = computed(() => list.value.length > 0 || finished.value)
@@ -51,17 +51,6 @@ const ready = computed(() => list.value.length > 0 || finished.value)
 watch(activeTab, () => refresh())
 const debouncedRequery = debounce(() => refresh(), 300)
 watch(keyword, debouncedRequery)
-
-/** 全局滚动区触底 → 加载下一页（App.ku.vue 广播 app:scrolltolower） */
-onMounted(() => {
-  uni.$on('app:scrolltolower', loadMore)
-})
-onUnmounted(() => {
-  uni.$off('app:scrolltolower', loadMore)
-})
-
-/** 下拉刷新（App.ku.vue 全局滚动区） */
-usePageRefresh(() => refresh())
 
 function goDetail(order: RequisitionOrder) {
   uni.navigateTo({ url: `/pages-material/requisition/detail/index?id=${order.id}` })
@@ -74,14 +63,21 @@ function summary(order: RequisitionOrder) {
 </script>
 
 <template>
-  <view class="page-material-requisition-list min-h-screen bg-#f2f3f5 px-4 pb-[140px]">
-    <wd-tabs v-model="activeTab">
-      <wd-tab v-for="tab in FILTER_TABS" :key="tab.label" :title="tab.label" />
-    </wd-tabs>
+  <PageScaffold
+    :loading="loading && !list.length"
+    :error="error && !list.length ? '加载失败，请下拉重试' : ''"
+    :empty="ready && !list.length"
+    empty-text="暂无符合条件的领用单"
+  >
+    <template #header>
+      <wd-tabs v-model="activeTab">
+        <wd-tab v-for="tab in FILTER_TABS" :key="tab.label" :title="tab.label" />
+      </wd-tabs>
 
-    <view class="mt-2">
-      <wd-search v-model="keyword" placeholder="搜索单号 / 物资名称" />
-    </view>
+      <view class="mt-2">
+        <wd-search v-model="keyword" placeholder="搜索单号 / 物资名称" />
+      </view>
+    </template>
 
     <view v-if="list.length" class="mt-3 flex flex-col gap-3">
       <view
@@ -104,11 +100,9 @@ function summary(order: RequisitionOrder) {
         </view>
       </view>
 
-      <wd-loadmore :state="loading ? 'loading' : 'finished'" finished-text="没有更多了" />
+      <wd-loadmore :state="finished ? 'finished' : 'loading'" finished-text="没有更多了" />
     </view>
-
-    <wd-empty v-else-if="ready" class="mt-20" description="暂无符合条件的领用单" />
-  </view>
+  </PageScaffold>
 </template>
 
 <style lang="scss" scoped>

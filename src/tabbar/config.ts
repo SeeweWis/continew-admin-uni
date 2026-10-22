@@ -32,7 +32,7 @@ export const nativeTabbarList: NativeTabBarItem[] = [
   {
     iconPath: 'static/tabbar/scan.png',
     selectedIconPath: 'static/tabbar/scan.png',
-    pagePath: 'pages/material/index',
+    pagePath: 'pages/scan/index',
     text: '%tabbar.scan%',
   },
   {
@@ -59,7 +59,7 @@ export const customTabbarList: CustomTabBarItem[] = [
   // 中央鼓包：模板示例入口
   {
     text: '%tabbar.scan%',
-    pagePath: 'pages/material/index',
+    pagePath: 'pages/scan/index',
     iconType: 'unocss',
     icon: 'i-carbon-scan',
     isBulge: true,

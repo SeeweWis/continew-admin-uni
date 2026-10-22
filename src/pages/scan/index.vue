@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { useToast } from '@wot-ui/ui'
+import { DEFAULT_SCAN_ROUTE, resolveScanTarget } from '@/modules/registry'
 import { usePromptDialog } from '@/utils/dialog'
 
 definePage({
@@ -8,17 +9,6 @@ definePage({
     navigationBarTitleText: '扫码',
   },
 })
-
-/**
- * 扫码结果路由规则：按编码前缀识别类型后跳转对应业务页
- * （前缀规范待后端定稿，定稿后只需调整此表；未匹配时默认按物资码处理）
- */
-const SCAN_ROUTES = [
-  { prefixes: ['MAT', 'WL'], label: '物资码', route: '/pages-material/material/detail/index' },
-  { prefixes: ['STK', 'PD'], label: '盘点码', route: '/pages-material/stock/stocktake/index' },
-  { prefixes: ['ACT', 'QD'], label: '签到码', route: '/pages-training/activity/sign/index' },
-  { prefixes: ['CAB', 'YJG'], label: '应急柜码', route: '/pages-material/cabinet/check/index' },
-]
 
 const cameraError = ref(false)
 /** scope.camera 授权状态：false 表示用户已拒绝授权 */
@@ -79,11 +69,11 @@ function handleScanResult(code: string) {
   }
   locked.value = true
   uni.vibrateShort({})
-  const target = SCAN_ROUTES.find(item => item.prefixes.some(prefix => code.toUpperCase().startsWith(prefix)))
-  toast.show(`识别成功：${target?.label ?? '物资码'}`)
+  const target = resolveScanTarget(code)
+  toast.show(`识别成功：${target?.label ?? '业务码'}`)
   setTimeout(() => {
     uni.navigateTo({
-      url: target?.route ?? SCAN_ROUTES[0].route,
+      url: target?.route ?? DEFAULT_SCAN_ROUTE,
       fail: () => (locked.value = false),
     })
   }, 600)
@@ -94,7 +84,7 @@ const promptDialog = usePromptDialog()
 async function handleManualInput() {
   const value = await promptDialog({
     title: '手动输入编码',
-    inputProps: { placeholder: '物资码 / 盘点码 / 签到码 / 应急柜码' },
+    inputProps: { placeholder: '请输入业务编码' },
   })
   if (value) {
     handleScanResult(value.trim())
@@ -138,7 +128,7 @@ async function handleManualInput() {
         <view class="scan-line" />
       </view>
       <text class="mt-40rpx text-24rpx text-white/80">
-        将物资码 / 盘点码 / 签到码 / 应急柜码对准取景框
+        将业务编码对准取景框
       </text>
     </view>
 
