@@ -24,6 +24,9 @@ dist
 .stylelintcache
 .eslintcache
 
+# codebase-memory MCP 本地索引缓存（可随时重建，不入库）
+.codebase-memory/
+
 docs/.vitepress/dist
 docs/.vitepress/cache
 

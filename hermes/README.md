@@ -20,7 +20,7 @@
 | [api.md](./api.md) | 请求层规范：分层、httpGet/Post 用法、错误四分类、401 双 token 策略 |
 | [sop-new-page.md](./sop-new-page.md) | 新页面/组件/分包/tabbar/hooks SOP 与验证清单 |
 | [performance.md](./performance.md) | 性能与分包：主包体积、内置优化表、包体积检查、编码侧规则 |
-| [release.md](./release.md) | 发布流程：upload:mp 全流程、changesets、uvm 升级、环境切换、合入门禁 |
+| [release.md](./release.md) | 发布流程：upload:mp 全流程、uvm 升级、环境切换、合入门禁 |
 
 ## 常用命令
 
@@ -31,5 +31,4 @@ pnpm dev:app        # APP 开发
 pnpm build:mp       # 微信小程序生产构建
 pnpm type-check     # vue-tsc 类型检查(合入前必过)
 pnpm lint:fix       # ESLint 修复
-pnpm test:run       # vitest 单次运行
 ```

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import type { MaterialItem } from '@/api/types/material'
+import type { MaterialItem } from '../mock'
 import { computed, ref } from 'vue'
-import { getMaterials } from '@/api/material'
+import { MATERIALS } from '../mock'
 
 defineOptions({ name: 'MaterialPicker' })
 
@@ -18,7 +18,7 @@ const filtered = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
   if (!kw)
     return materials.value
-  return materials.value.filter(m => m.materialName.toLowerCase().includes(kw) || m.materialCode.toLowerCase().includes(kw))
+  return materials.value.filter(m => m.name.toLowerCase().includes(kw) || m.code.toLowerCase().includes(kw))
 })
 
 async function open() {
@@ -27,7 +27,7 @@ async function open() {
   visible.value = true
   loading.value = true
   try {
-    materials.value = (await getMaterials({ pageNum: 1, pageSize: 100, status: '0' })).rows
+    materials.value = MATERIALS
   }
   finally {
     loading.value = false
@@ -35,15 +35,15 @@ async function open() {
 }
 
 function toggle(material: MaterialItem) {
-  const index = selectedIds.value.indexOf(String(material.materialId))
+  const index = selectedIds.value.indexOf(String(material.id))
   if (index >= 0)
     selectedIds.value.splice(index, 1)
   else
-    selectedIds.value.push(String(material.materialId))
+    selectedIds.value.push(String(material.id))
 }
 
 function handleConfirm() {
-  emit('confirm', materials.value.filter(m => selectedIds.value.includes(String(m.materialId))))
+  emit('confirm', materials.value.filter(m => selectedIds.value.includes(String(m.id))))
   visible.value = false
 }
 
@@ -61,20 +61,20 @@ defineExpose({ open })
       <scroll-view scroll-y class="h-[50vh]">
         <view
           v-for="material in filtered"
-          :key="material.materialId"
+          :key="material.id"
           class="flex items-center gap-3 px-4 py-3 active:bg-#f2f3f5"
           @click="toggle(material)"
         >
           <text
             class="text-6"
-            :class="selectedIds.includes(String(material.materialId)) ? 'i-carbon-checkmark-filled text-[var(--wot-color-theme,#4d80f0)]' : 'i-carbon-circle-dash text-#c9cdd4'"
+            :class="selectedIds.includes(String(material.id)) ? 'i-carbon-checkmark-filled text-[var(--wot-color-theme,#4d80f0)]' : 'i-carbon-circle-dash text-#c9cdd4'"
           />
           <view class="flex-1">
             <view class="flex items-center gap-2">
-              <text class="text-4 text-#1d2129">{{ material.materialName }}</text>
-              <text class="text-2 text-#86909c">{{ material.materialCode }}</text>
+              <text class="text-4 text-#1d2129">{{ material.name }}</text>
+              <text class="text-2 text-#86909c">{{ material.code }}</text>
             </view>
-            <text class="mt-1 block text-3 text-#86909c">{{ material.spec }} · 库存 {{ material.stockQty }} {{ material.unit }}</text>
+            <text class="mt-1 block text-3 text-#86909c">{{ material.spec }} · 库存 {{ material.stock }} {{ material.unit }}</text>
           </view>
         </view>
         <wd-loading v-if="loading" />

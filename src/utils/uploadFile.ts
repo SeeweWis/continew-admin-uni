@@ -288,12 +288,8 @@ async function uploadFile<T>({
       filePath: tempFilePath,
       name: 'file', // 文件对应的 key
       formData,
-      header: {
-        // H5环境下不需要手动设置Content-Type，让浏览器自动处理multipart格式
-        // #ifndef H5
-        'Content-Type': 'multipart/form-data',
-        // #endif
-      },
+      // 不手动设置 Content-Type：由各端自行生成 multipart boundary，
+      // Authorization / clientid 由 uploadFile 拦截器统一注入
       // 确保文件名称合法
       success: (uploadFileRes) => {
         try {

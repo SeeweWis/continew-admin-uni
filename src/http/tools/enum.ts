@@ -34,8 +34,9 @@ export function isSuccessResultCode(code: number): boolean {
   return [ResultEnum.Success0, ResultEnum.Success200].includes(code)
 }
 
-export function getResponseMessage(responseData: Partial<IResponse<any>> | undefined, fallback = '请求错误'): string {
-  return responseData?.msg || responseData?.message || fallback
+export function getResponseMessage(responseData: Partial<IResponse<unknown>> | undefined, fallback = '请求错误'): string {
+  const message = responseData?.msg ?? responseData?.message
+  return typeof message === 'string' && message ? message : fallback
 }
 
 export function createHttpError<T>(params: HttpError<T>): HttpError<T> {

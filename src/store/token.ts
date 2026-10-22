@@ -20,6 +20,32 @@ const tokenInfoState: ITokenInfo = {
   refreshExpiresIn: 0,
 }
 
+const ACCESS_TOKEN_EXPIRE_KEY = 'accessTokenExpireTime'
+const REFRESH_TOKEN_EXPIRE_KEY = 'refreshTokenExpireTime'
+
+/** 读取本地时间戳并校验类型，非法值按已过期（0）处理 */
+function readStorageTimestamp(key: string): number {
+  const value = uni.getStorageSync(key)
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return parsed
+    }
+  }
+  return 0
+}
+
+export function getAccessTokenExpireTime() {
+  return readStorageTimestamp(ACCESS_TOKEN_EXPIRE_KEY)
+}
+
+export function getRefreshTokenExpireTime() {
+  return readStorageTimestamp(REFRESH_TOKEN_EXPIRE_KEY)
+}
+
 /**
  * 登录态状态仓库：只负责 token 的缓存、过期判断与持久化
  * 登录/退出的整合流程见 @/services/auth
@@ -48,8 +74,8 @@ export const useTokenStore = defineStore(
     const setTokenInfo = (val: ITokenInfo) => {
       updateNowTime()
       tokenInfo.value = val
-      uni.setStorageSync('accessTokenExpireTime', Date.now() + val.expiresIn * 1000)
-      uni.setStorageSync('refreshTokenExpireTime', Date.now() + val.refreshExpiresIn * 1000)
+      uni.setStorageSync(ACCESS_TOKEN_EXPIRE_KEY, Date.now() + val.expiresIn * 1000)
+      uni.setStorageSync(REFRESH_TOKEN_EXPIRE_KEY, Date.now() + val.refreshExpiresIn * 1000)
     }
 
     /**
@@ -58,8 +84,8 @@ export const useTokenStore = defineStore(
     const clear = () => {
       updateNowTime()
       // 清除存储的过期时间
-      uni.removeStorageSync('accessTokenExpireTime')
-      uni.removeStorageSync('refreshTokenExpireTime')
+      uni.removeStorageSync(ACCESS_TOKEN_EXPIRE_KEY)
+      uni.removeStorageSync(REFRESH_TOKEN_EXPIRE_KEY)
       tokenInfo.value = { ...tokenInfoState }
       uni.removeStorageSync('token')
     }
@@ -68,7 +94,7 @@ export const useTokenStore = defineStore(
      * 判断token是否过期
      */
     const isTokenExpired = computed(() => {
-      const expireTime = uni.getStorageSync('accessTokenExpireTime')
+      const expireTime = getAccessTokenExpireTime()
       if (!expireTime)
         return true
       return nowTime.value >= expireTime
@@ -93,7 +119,7 @@ export const useTokenStore = defineStore(
     })
 
     const hasValidRefreshToken = computed(() => {
-      const expireTime = uni.getStorageSync('refreshTokenExpireTime')
+      const expireTime = getRefreshTokenExpireTime()
       return !!tokenInfo.value.refreshToken && !!expireTime && nowTime.value < expireTime
     })
 

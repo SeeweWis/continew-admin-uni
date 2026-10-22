@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import type { ICaptcha } from '@/api/types/login'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useToast } from '@wot-ui/ui'
 import { getCode } from '@/api/login'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
+import { useSiteConfigStore } from '@/store/site'
 import { loginByPassword, loginByWechat } from '@/services/auth'
 
-// 品牌名来自环境变量
-const APP_TITLE = import.meta.env.VITE_APP_TITLE || 'seewis-single-uni'
+const siteConfigStore = useSiteConfigStore()
+const appTitle = computed(() => siteConfigStore.siteTitle)
+void siteConfigStore.load()
 
 const { state, close } = useLoginPopup()
 // 轻提示（必须在 setup 顶层调用，内部依赖 inject）
@@ -138,7 +140,7 @@ async function handleAccountLogin() {
         </view>
         <view class="login-brand">
           <text class="login-eyebrow">uni-app 小程序开发模板</text>
-          <text class="login-brand-name">{{ APP_TITLE }}</text>
+          <text class="login-brand-name">{{ appTitle }}</text>
         </view>
       </view>
 

@@ -32,22 +32,45 @@ export type UserRole = string
 
 /** 后端 /auth/user/info 的 UserInfoResp */
 export interface IGetUserInfoRes {
-  id: number
+  /** 后端 Long 雪花 ID，超出 JS 安全整数范围时由 Jackson 序列化为字符串 */
+  id: string | number
   username: string
   nickname: string
   avatar?: string
+  gender?: 0 | 1 | 2
+  email?: string
+  phone?: string
+  description?: string
+  pwdResetTime?: string
+  pwdExpired?: boolean
+  createTime?: string
+  registrationDate?: string
+  deptId?: string | number
+  deptName?: string
   roles: string[]
   permissions: string[]
+  roleNames?: string[]
   [key: string]: unknown
 }
 
 /** 本地用户状态映射 */
 export interface IUserInfoRes {
-  userId: number
+  userId: string | number
   username: string
   nickname: string
   avatar?: string
+  gender?: 0 | 1 | 2
+  email?: string
+  phone?: string
+  description?: string
+  pwdResetTime?: string
+  pwdExpired?: boolean
+  createTime?: string
+  registrationDate?: string
+  deptId?: string | number
+  deptName?: string
   roles?: UserRole[]
   permissions?: string[]
+  roleNames?: string[]
   [key: string]: unknown
 }

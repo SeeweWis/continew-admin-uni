@@ -2,5 +2,5 @@ export interface ICommonFileUploadRes {
   id: string
   url: string
   thUrl?: string
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, string>
 }

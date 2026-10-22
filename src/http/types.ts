@@ -1,8 +1,10 @@
 /**
  * 在 uniapp 的 RequestOptions 和 IUniUploadFileOptions 基础上，添加自定义参数
  */
-export type CustomRequestOptions = UniApp.RequestOptions & {
-  query?: Record<string, any>
+export type CustomRequestOptions = Omit<UniApp.RequestOptions, 'method'> & {
+  /** 部分端支持 PATCH（个人资料、消息已读等接口使用） */
+  method?: UniApp.RequestOptions['method'] | 'PATCH'
+  query?: Record<string, unknown>
   /** 出错时是否隐藏错误提示 */
   hideErrorToast?: boolean
   /** 认证会话端点不触发自动刷新 */
@@ -19,7 +21,7 @@ export interface HttpRequestResult<T> {
   requestTask: UniApp.RequestTask
 }
 
-export interface HttpError<T = any> {
+export interface HttpError<T = unknown> {
   type: 'business' | 'auth' | 'http' | 'network'
   code?: number
   statusCode?: number
@@ -29,29 +31,14 @@ export interface HttpError<T = any> {
 }
 
 // 通用响应格式（兼容 msg + message 字段）
-export type IResponse<T = any> = {
+export type IResponse<T = unknown> = {
   code: number
   data: T
   message: string
-  [key: string]: any // 允许额外属性
+  [key: string]: unknown // 允许额外属性
 } | {
   code: number
   data: T
   msg: string
-  [key: string]: any // 允许额外属性
-}
-
-// 分页请求参数
-export interface PageParams {
-  page: number
-  pageSize: number
-  [key: string]: any
-}
-
-// 分页响应数据
-export interface PageResult<T> {
-  list: T[]
-  total: number
-  page: number
-  pageSize: number
+  [key: string]: unknown // 允许额外属性
 }

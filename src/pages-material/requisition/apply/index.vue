@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import type { MaterialItem } from '@/api/types/material'
+import type { MaterialItem } from '../../mock'
 import { ref } from 'vue'
 import { useToast } from '@wot-ui/ui'
 import dayjs from 'dayjs'
 import MaterialBottomBar from '../../components/MaterialBottomBar.vue'
 import MaterialPicker from '../../components/MaterialPicker.vue'
-import { createRequisition, submitRequisition } from '@/api/material'
 
 definePage({
   style: {
@@ -30,7 +29,7 @@ function openPicker() {
 
 function handlePicked(items: MaterialItem[]) {
   for (const material of items) {
-    if (!lines.value.some(line => line.material.materialId === material.materialId))
+    if (!lines.value.some(line => line.material.id === material.id))
       lines.value.push({ material, quantity: 1 })
   }
 }
@@ -64,12 +63,8 @@ async function handleSubmit() {
   }
   submitting.value = true
   try {
-    const requisitionId = await createRequisition({
-      title: form.value.purpose.trim(),
-      items: lines.value.map(line => ({ materialId: line.material.materialId, quantity: line.quantity })),
-      remark: `使用地点：${form.value.place.trim()}；预计归还：${dayjs(form.value.expectReturnDate).format('YYYY-MM-DD')}；紧急程度：${form.value.urgent === 'urgent' ? '紧急' : '一般'}`,
-    })
-    await submitRequisition(requisitionId)
+    // 后端 /app/material/* 尚未提供，先保留本地演示提交
+    await new Promise(resolve => setTimeout(resolve, 500))
     toast.success('提交成功，等待审批')
     setTimeout(() => uni.navigateBack(), 800)
   }
@@ -93,19 +88,19 @@ async function handleSubmit() {
       <view v-if="lines.length" class="mt-1">
         <view
           v-for="(line, index) in lines"
-          :key="line.material.materialId"
+          :key="line.material.id"
           class="flex items-start justify-between py-3"
           :class="index > 0 ? 'border-t border-solid border-#f2f3f5' : ''"
         >
           <view class="flex-1">
             <view class="flex items-center gap-2">
-              <text class="text-4 text-#1d2129">{{ line.material.materialName }}</text>
-              <text class="text-2 text-#86909c">{{ line.material.materialCode }}</text>
+              <text class="text-4 text-#1d2129">{{ line.material.name }}</text>
+              <text class="text-2 text-#86909c">{{ line.material.code }}</text>
             </view>
-            <text class="mt-1 block text-3 text-#86909c">{{ line.material.spec }} · 库存 {{ line.material.stockQty }}{{ line.material.unit }}</text>
+            <text class="mt-1 block text-3 text-#86909c">{{ line.material.spec }} · 库存 {{ line.material.stock }}{{ line.material.unit }}</text>
           </view>
           <view class="ml-3 flex items-center gap-3">
-            <wd-input-number v-model="line.quantity" :min="1" :max="line.material.stockQty" />
+            <wd-input-number v-model="line.quantity" :min="1" :max="line.material.stock" />
             <text class="i-carbon-delete text-5 text-#86909c" @click="removeLine(index)" />
           </view>
         </view>

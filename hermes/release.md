@@ -18,14 +18,10 @@ pnpm upload:mp --robot=2                        # 指定机器人(1-30,多人协
 2. 根目录有私钥文件 `private.<appid>.key`(appid 与 `env/.env` 的 `VITE_WX_APPID` 一致)
 3. 上传后到公众平台「版本管理 → 开发版本」设为体验版
 
-## 2. 版本管理(changesets)
+## 2. 版本号
 
-```bash
-pnpm upload:changeset   # 生成变更记录 + 消费变更(升版本)
-```
-
-- 对外可见的变更(新页面、接口变动、依赖升级)提交 changeset
-- `pnpm bump-version` 单独升 package.json 版本(上传脚本读它)
+- `pnpm bump-version` 单独升 `package.json` 版本(上传脚本读取它)
+- 对外可见的变更(新页面、接口变动、依赖升级)写入 commit message 与 CHANGELOG
 
 ## 3. uni-app 依赖升级
 
@@ -34,7 +30,7 @@ pnpm uvm        # 交互式升级 @dcloudio/* 全家桶
 pnpm uvm-rm     # 清理升级残留
 ```
 
-升级后必跑:`pnpm type-check && pnpm test:run`,并三端冒烟(`dev` / `dev:mp` / `dev:app`)。
+升级后必跑:`pnpm type-check`,并三端冒烟(`dev` / `dev:mp` / `dev:app`)。
 
 ## 4. 环境切换
 
@@ -43,7 +39,7 @@ env 文件在 `env/` 目录,按 mode 叠加:`.env`(公共)→ `.env.development`
 ## 5. 合入前门禁
 
 ```bash
-pnpm type-check && pnpm lint && pnpm test:run
+pnpm type-check && pnpm lint
 ```
 
 提交信息 conventional commits(commitlint 强制):`feat: / fix: / docs: / style: / refactor: / perf: / test: / chore:`。

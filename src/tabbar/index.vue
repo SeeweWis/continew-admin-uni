@@ -16,7 +16,6 @@ defineOptions({
 const scanMenuOpen = ref(false)
 
 const scanActions = [
-  { label: '图表示例', icon: 'i-carbon-upload', className: 'scan-action-left', route: '/pages-demo/ucharts/index' },
   { label: '表单示例', icon: 'i-carbon-box', className: 'scan-action-center', route: '/pages-material/requisition/apply/index' },
   { label: '列表示例', icon: 'i-carbon-download', className: 'scan-action-right', route: '/pages-material/requisition/list/index' },
 ]

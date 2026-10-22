@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { RequisitionOrder } from '@/api/types/material'
+import type { RequisitionOrder, RequisitionStatus } from '../../mock'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { usePageRefresh } from '@/hooks/usePageRefresh'
 import { useScroll } from '@/hooks/useScroll'
 import { debounce } from '@/utils/debounce'
-import { getRequisitions } from '@/api/material'
+import { ORDERS, REQUISITION_STATUS } from '../../mock'
 
 definePage({
   style: {
@@ -13,25 +13,14 @@ definePage({
 })
 
 /** 状态筛选 tabs：statuses 为空时表示全部 */
-type RequisitionStatus = RequisitionOrder['status']
-
-const STATUS_META: Record<RequisitionStatus, { text: string, tag: 'primary' | 'success' | 'danger' | 'warning' | 'default' }> = {
-  draft: { text: '草稿', tag: 'default' },
-  approving: { text: '审批中', tag: 'warning' },
-  approved: { text: '待出库', tag: 'primary' },
-  rejected: { text: '已驳回', tag: 'danger' },
-  outbound: { text: '已出库', tag: 'primary' },
-  returned: { text: '归还中', tag: 'warning' },
-  done: { text: '已完成', tag: 'success' },
-}
-
 const FILTER_TABS: { label: string, statuses?: RequisitionStatus[] }[] = [
   { label: '全部' },
-  { label: '待审批', statuses: ['approving'] },
+  { label: '待审批', statuses: ['pending'] },
   { label: '待出库', statuses: ['approved'] },
-  { label: '已出库', statuses: ['outbound'] },
-  { label: '归还中', statuses: ['returned'] },
-  { label: '已完成', statuses: ['done'] },
+  { label: '待签收', statuses: ['outbound'] },
+  { label: '使用中', statuses: ['signed'] },
+  { label: '归还中', statuses: ['returning'] },
+  { label: '已归还', statuses: ['returned'] },
   { label: '已驳回', statuses: ['rejected'] },
 ]
 const activeTab = ref(0)
@@ -40,8 +29,18 @@ const keyword = ref('')
 /** mock 分页查询：按 tab 状态与关键字过滤后分页返回（后端接口定稿后替换） */
 async function fetchOrders(page: number, pageSize: number): Promise<RequisitionOrder[]> {
   const statuses = FILTER_TABS[activeTab.value].statuses
-  const result = await getRequisitions({ pageNum: page, pageSize, status: statuses?.[0], title: keyword.value.trim() || undefined })
-  return result.rows
+  const kw = keyword.value.trim().toLowerCase()
+  const filtered = ORDERS.filter((order) => {
+    if (statuses && !statuses.includes(order.status))
+      return false
+    if (!kw)
+      return true
+    return order.code.toLowerCase().includes(kw)
+      || order.purpose.toLowerCase().includes(kw)
+      || order.lines.some(line => line.name.toLowerCase().includes(kw))
+  })
+  const start = (page - 1) * pageSize
+  return filtered.slice(start, start + pageSize)
 }
 
 const { list, loading, finished, refresh, loadMore } = useScroll<RequisitionOrder>({ fetchData: fetchOrders })
@@ -65,12 +64,12 @@ onUnmounted(() => {
 usePageRefresh(() => refresh())
 
 function goDetail(order: RequisitionOrder) {
-  uni.navigateTo({ url: `/pages-material/requisition/detail/index?id=${order.requisitionId}` })
+  uni.navigateTo({ url: `/pages-material/requisition/detail/index?id=${order.id}` })
 }
 
 function summary(order: RequisitionOrder) {
-  const first = order.items[0]
-  return order.items.length > 1 ? `${first.materialName ?? '物资'} 等 ${order.items.length} 种物资` : `${first.materialName ?? '物资'} × ${first.quantity}${first.unit ?? ''}`
+  const first = order.lines[0]
+  return order.lines.length > 1 ? `${first.name} 等 ${order.lines.length} 种物资` : `${first.name} × ${first.quantity}${first.unit}`
 }
 </script>
 
@@ -87,20 +86,20 @@ function summary(order: RequisitionOrder) {
     <view v-if="list.length" class="mt-3 flex flex-col gap-3">
       <view
         v-for="order in list"
-        :key="order.requisitionId"
+        :key="order.id"
         class="rounded-lg bg-white p-4 active:bg-#fafafa"
         @click="goDetail(order)"
       >
         <view class="flex items-center justify-between">
-          <text class="text-3 text-#4e5969 font-medium">{{ order.requisitionNo }}</text>
-          <wd-tag :type="STATUS_META[order.status].tag">
-            {{ STATUS_META[order.status].text }}
+          <text class="text-3 text-#4e5969 font-medium">{{ order.code }}</text>
+          <wd-tag :type="REQUISITION_STATUS[order.status].tag">
+            {{ REQUISITION_STATUS[order.status].text }}
           </wd-tag>
         </view>
         <text class="mt-3 block text-4 text-#1d2129 font-medium">{{ summary(order) }}</text>
-        <text class="mt-1 block text-3 text-#86909c">{{ order.title }}</text>
+        <text class="mt-1 block text-3 text-#86909c">{{ order.purpose }}</text>
         <view class="mt-3 flex items-center justify-between border-t border-#f2f3f5 border-solid pt-3">
-          <text class="text-3 text-#86909c">{{ order.createTime ?? '' }}</text>
+          <text class="text-3 text-#86909c">{{ order.applyTime }}</text>
           <text class="i-carbon-chevron-right text-3 text-#c9cdd4" />
         </view>
       </view>

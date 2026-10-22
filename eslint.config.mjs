@@ -19,6 +19,9 @@ export default uniHelper({
     'src/manifest.json',
     // 忽略自动生成文件
     'src/service/**',
+    // pnpm 配置由 pnpm 维护，ESLint 格式化会破坏其结构
+    'pnpm-workspace.yaml',
+    'pnpm-lock.yaml',
   ],
   // https://eslint-config.antfu.me/rules
   rules: {
@@ -65,6 +68,7 @@ export default uniHelper({
     'src/http/**',
     // 上传基础设施：非组件上下文，允许原生 toast
     'src/utils/uploadFile.ts',
+    'src/services/file.ts',
     // 第三方图表组件拷贝副本
     'src/components/qiun-data-charts/**',
   ],

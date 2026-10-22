@@ -40,7 +40,7 @@
 ```
 src/
 ├── pages/          # 页面(约定式路由,文件即路径;分包页面不放这里)
-├── pages-demo/     # 分包目录(subPackages 配置,分包不能是 src/pages 的子目录)
+├── pages-*/        # 分包目录(subPackages 配置,分包不能是 src/pages 的子目录)
 ├── components/     # 全局组件(fg- 前缀,easycom 自动注册)
 ├── layouts/        # 布局
 ├── api/            # API 接口定义
@@ -49,7 +49,7 @@ src/
 ├── hooks/          # 组合式函数(auto-import,免 import)
 ├── tabbar/         # 底部导航(config.ts 为唯一配置源)
 ├── static/         # 静态资源(@img 别名指向 images 子目录)
-├── service/        # openapi 生成目录(`pnpm openapi`,eslint 忽略,勿手改)
+├── services/       # 业务编排(登录、上传),按领域建目录
 └── types/          # 类型声明(大部分为生成物,见第 1 节)
 ```
 

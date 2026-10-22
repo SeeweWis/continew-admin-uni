@@ -7,7 +7,9 @@ import { navbarState, SCAN_PAGE } from '@/hooks/useNavbar'
 import { pageRefreshState } from '@/hooks/usePageRefresh'
 import { isPageTabbar } from './tabbar/store'
 import { currRoute } from './utils'
+import { useSiteConfigStore } from '@/store/site'
 
+const siteConfigStore = useSiteConfigStore()
 const routePath = ref('/')
 const isCurrentPageTabbar = ref(true)
 /** 状态栏高度：仅导航栏隐藏的页面用它撑起顶部，内容从状态栏之下开始 */
@@ -41,6 +43,7 @@ async function handleRefresh() {
 }
 
 onShow(() => {
+  void siteConfigStore.load()
   const { path } = currRoute()
   routePath.value = path
   const info = uni.getWindowInfo ? uni.getWindowInfo() : uni.getSystemInfoSync()

@@ -90,18 +90,16 @@ export default defineConfig(({ command, mode }) => {
         exclude: ['**/components/**/**.*', '**/sections/**/**.*'],
         // pages 目录为 src/pages，分包目录不能配置在pages目录下！！
         // 是个数组，可以配置多个，但是不能为pages里面的目录！！
-        // "src/pages-demo" 是模板示例预留的，方便后续插入 demo 页面
         subPackages: [
-          'src/pages-demo',
-          // 工作示例 Tab 承接：页面、权限与流程示例
+          // 工作台：安全学习与审批入口
           'src/pages-work',
-          // 物资示例 Tab 承接：表单、列表与扫码示例
+          // 物资：领用、出库、归还与盘点
           'src/pages-material',
-          // 应急示例：点位、事件与补录页面
+          // 应急：事件登记与点位
           'src/pages-emergency',
-          // 培训示例 Tab 承接：任务、课程、考试与活动页面
+          // 培训：活动列表与签到
           'src/pages-training',
-          // 个人中心示例：信息、记录与设置页面
+          // 个人中心：信息、培训档案与消息设置
           'src/pages-profile',
         ],
         dts: 'src/types/uni-pages.d.ts',

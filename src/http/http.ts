@@ -1,6 +1,6 @@
 import type { CustomRequestOptions, HttpError, IResponse } from '@/http/types'
 import { useUserStore } from '@/store/user'
-import { useTokenStore } from '@/store/token'
+import { getRefreshTokenExpireTime, useTokenStore } from '@/store/token'
 import { openLoginPopup } from '@/utils/loginPopup'
 import { createHttpError, getResponseMessage, HttpErrorType, isSuccessResultCode, ResultEnum, ShowMessage } from './tools/enum'
 import { refreshToken as refreshTokenApi } from '@/api/login'
@@ -12,7 +12,7 @@ export async function refreshAccessToken() {
     refreshPromise = (async () => {
       const tokenStore = useTokenStore()
       const refreshToken = tokenStore.tokenInfo.refreshToken
-      const refreshExpiry = uni.getStorageSync('refreshTokenExpireTime')
+      const refreshExpiry = getRefreshTokenExpireTime()
       if (!refreshToken || !refreshExpiry || Date.now() >= refreshExpiry)
         throw new Error('刷新令牌已过期')
 
@@ -68,6 +68,8 @@ function sendRequest<T>(options: CustomRequestOptions) {
   return new Promise<T>((resolve, reject) => {
     uni.request({
       ...options,
+      // UniApp 类型未声明 PATCH，但部分平台运行时支持；个人资料/消息接口依赖 PATCH
+      method: options.method as UniApp.RequestOptions['method'],
       dataType: 'json',
       // #ifndef MP-WEIXIN
       responseType: 'json',
@@ -192,7 +194,7 @@ function sendRequest<T>(options: CustomRequestOptions) {
  * @param header 请求头，默认为json格式
  * @returns
  */
-export function httpGet<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpGet<T>(url: string, query?: Record<string, unknown>, header?: Record<string, unknown>, options?: Partial<CustomRequestOptions>) {
   return http<T>({
     url,
     query,
@@ -210,7 +212,7 @@ export function httpGet<T>(url: string, query?: Record<string, any>, header?: Re
  * @param header 请求头，默认为json格式
  * @returns
  */
-export function httpPost<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpPost<T>(url: string, data?: unknown, query?: Record<string, unknown>, header?: Record<string, unknown>, options?: Partial<CustomRequestOptions>) {
   return http<T>({
     url,
     query,
@@ -223,7 +225,7 @@ export function httpPost<T>(url: string, data?: Record<string, any>, query?: Rec
 /**
  * PUT 请求
  */
-export function httpPut<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpPut<T>(url: string, data?: unknown, query?: Record<string, unknown>, header?: Record<string, unknown>, options?: Partial<CustomRequestOptions>) {
   return http<T>({
     url,
     data,
@@ -237,7 +239,7 @@ export function httpPut<T>(url: string, data?: Record<string, any>, query?: Reco
 /**
  * DELETE 请求（无请求体，仅 query）
  */
-export function httpDelete<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpDelete<T>(url: string, query?: Record<string, unknown>, header?: Record<string, unknown>, options?: Partial<CustomRequestOptions>) {
   return http<T>({
     url,
     query,

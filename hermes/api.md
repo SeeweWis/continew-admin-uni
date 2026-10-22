@@ -21,7 +21,7 @@ uni.request / uni.uploadFile
 ## 2. 调用方式
 
 ```ts
-import { httpGet, httpPost } from '@/http'
+import { httpGet, httpPost } from '@/http/http'
 
 // GET(query 自动序列化拼接)
 const data = await httpGet<IUser>('/user/info', { id: 1 })

@@ -46,7 +46,7 @@ const avatarUrl = computed(() => {
 const menus = [
   { label: '个人信息', hint: '查看与维护基础资料', icon: 'i-carbon-user-avatar', tone: 'blue', route: '/pages-profile/info/index' },
   { label: '培训记录', hint: '参训与学时归档', icon: 'i-carbon-education', tone: 'teal', route: '/pages-profile/training-record/index' },
-  { label: '消息设置', hint: '通知接收偏好', icon: 'i-carbon-settings', tone: 'amber', route: '/pages-profile/settings/message/index' },
+  { label: '消息中心', hint: '系统消息与公告', icon: 'i-carbon-notification', tone: 'amber', route: '/pages-profile/settings/message/index' },
 ]
 
 const menuToneClasses: Record<string, string> = {

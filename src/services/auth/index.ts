@@ -54,8 +54,19 @@ export async function fetchUserInfo(): Promise<IUserInfoRes> {
     username: res.username,
     nickname: res.nickname,
     avatar: res.avatar,
+    gender: res.gender,
+    email: res.email,
+    phone: res.phone,
+    description: res.description,
+    pwdResetTime: res.pwdResetTime,
+    pwdExpired: res.pwdExpired,
+    createTime: res.createTime,
+    registrationDate: res.registrationDate,
+    deptId: res.deptId,
+    deptName: res.deptName,
     roles: res.roles,
     permissions: res.permissions,
+    roleNames: res.roleNames,
   }
   useUserStore().setUserInfo(userInfo)
   return userInfo

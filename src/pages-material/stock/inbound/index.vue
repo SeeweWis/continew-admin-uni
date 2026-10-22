@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { MaterialItem } from '@/api/types/material'
+import type { MaterialItem } from '../../mock'
 import { ref } from 'vue'
 import { useToast } from '@wot-ui/ui'
 import dayjs from 'dayjs'
@@ -105,17 +105,17 @@ async function handleSubmit() {
       <view v-if="lines.length" class="mt-1">
         <view
           v-for="(line, index) in lines"
-          :key="line.material.materialId"
+          :key="line.material.id"
           class="py-4"
           :class="index > 0 ? 'border-t border-solid border-#f2f3f5' : ''"
         >
           <view class="flex items-start justify-between">
             <view class="flex-1">
               <view class="flex items-center gap-2">
-                <text class="text-4 text-#1d2129">{{ line.material.materialName }}</text>
-                <text class="text-2 text-#86909c">{{ line.material.materialCode }}</text>
+                <text class="text-4 text-#1d2129">{{ line.material.name }}</text>
+                <text class="text-2 text-#86909c">{{ line.material.code }}</text>
               </view>
-              <text class="mt-1 block text-3 text-#86909c">{{ line.material.spec }} · 当前库存 {{ line.material.stockQty }}{{ line.material.unit }}</text>
+              <text class="mt-1 block text-3 text-#86909c">{{ line.material.spec }} · 当前库存 {{ line.material.stock }}{{ line.material.unit }}</text>
             </view>
             <text class="i-carbon-delete text-5 text-#86909c" @click="removeLine(index)" />
           </view>
@@ -124,7 +124,7 @@ async function handleSubmit() {
             <wd-input-number v-model="line.quantity" :min="1" :max="9999" />
           </view>
           <wd-datetime-picker
-            v-if="line.material.expiryDate"
+            v-if="line.material.expiryRequired"
             v-model="line.expiryDate"
             type="date"
             :min-date="minDate"

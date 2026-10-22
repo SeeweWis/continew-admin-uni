@@ -10,7 +10,7 @@ interface UseScrollReturn<T> {
   list: Ref<T[]>
   loading: Ref<boolean>
   finished: Ref<boolean>
-  error: Ref<any>
+  error: Ref<unknown>
   refresh: () => Promise<void>
   loadMore: () => Promise<void>
 }
@@ -22,7 +22,7 @@ export function useScroll<T>({
   const list = ref<T[]>([]) as Ref<T[]>
   const loading = ref(false)
   const finished = ref(false)
-  const error = ref<any>(null)
+  const error = ref<unknown>(null)
   const page = ref(1)
 
   const loadData = async () => {
