@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useToast } from '@wot-ui/ui'
 import { openLoginPopup } from '@/utils/loginPopup'
@@ -25,6 +26,7 @@ const confirmDialog = useConfirmDialog()
 const toast = useToast()
 
 const loggedIn = computed(() => tokenStore.hasLogin)
+onShow(() => tokenStore.updateNowTime())
 
 // 下拉刷新：重新拉取当前登录用户信息（未登录时忽略）
 usePageRefresh(async () => {

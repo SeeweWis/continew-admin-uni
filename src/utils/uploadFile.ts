@@ -1,7 +1,9 @@
+import type { HttpError } from '@/http/types'
 import { openLoginPopup } from '@/utils/loginPopup'
 import { getResponseMessage, isSuccessResultCode, ResultEnum } from '@/http/tools/enum'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
+import { ensureAccessToken } from '@/http/http'
 
 /**
  * 文件上传钩子函数使用示例
@@ -253,7 +255,7 @@ interface UploadFileOptions<T> {
  * @template T 上传成功后返回的数据类型
  * @param options 上传选项
  */
-function uploadFile<T>({
+async function uploadFile<T>({
   url,
   tempFilePath,
   formData,
@@ -266,6 +268,19 @@ function uploadFile<T>({
   onError,
   onComplete,
 }: UploadFileOptions<T>) {
+  try {
+    await ensureAccessToken()
+  }
+  catch (err) {
+    error.value = true
+    loading.value = false
+    const message = err instanceof Error ? err.message : (err as HttpError)?.message || '登录已过期，请重新登录'
+    uni.showToast({ icon: 'none', title: message })
+    onError?.(new Error(message))
+    onComplete?.()
+    return
+  }
+
   try {
     // 创建上传任务
     const uploadTask = uni.uploadFile({

@@ -50,7 +50,7 @@ export const navigateToInterceptor = {
     // 已登录（含本地 token 未过期）直接放行；小程序端登录为弹窗式（无登录页），
     // 业务分包页面需要有效登录态，未登录或 token 过期时唤起登录弹窗并阻止本次路由；
     // 运行中 token 被服务端判定失效的场景由 http 层 401 分支兜底（清登录态 + 唤起弹窗）
-    if (tokenStore.hasLogin) {
+    if (tokenStore.updateNowTime().hasLogin) {
       return true
     }
     if (isNeedLoginPath(path)) {

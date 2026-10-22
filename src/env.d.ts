@@ -11,13 +11,9 @@ declare module '*.vue' {
 interface ImportMetaEnv {
   /** 网站标题，应用名称 */
   readonly VITE_APP_TITLE: string
-  /** 后端登录客户端id（sys_client 表中授权类型包含 password/xcx 的客户端） */
+  /** 后端客户端 ID，认证类型应包含 ACCOUNT / MINI_PROGRAM */
   readonly VITE_APP_CLIENT_ID: string
-  /** 是否启用后端 @ApiEncrypt 请求加密 */
-  readonly VITE_API_ENCRYPT_ENABLE: 'true' | 'false'
-  /** 后端 API 加密请求头名称 */
-  readonly VITE_API_ENCRYPT_HEADER: string
-  /** 后端 api-decrypt.privateKey 对应的 RSA 公钥 */
+  /** 后端账号密码 RSA 公钥 */
   readonly VITE_API_ENCRYPT_PUBLIC_KEY: string
   /** 微信小程序 appid */
   readonly VITE_WX_APPID: string

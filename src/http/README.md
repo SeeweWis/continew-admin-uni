@@ -46,11 +46,14 @@ catch (error) {
 }
 ```
 
-## 与 seewis-single-admin 后端对齐
+## 与 ContiNew Admin 后端对齐
 
-- 受保护接口由拦截器统一注入 `Authorization: Bearer <token>` 和 `clientid`。
-- `/auth/login`、`/auth/register` 对应后端 `@ApiEncrypt`，调用时传入 `{ encrypt: true }`，请求体按 AES-ECB-PKCS7 加密，密钥按 RSA 公钥加密后放入 `encrypt-key` 请求头。
-- 当前后端已确认提供认证、用户信息和 OSS 接口；物资业务 `/app/material/*` 尚未在后端 Controller 中提供，相关页面仍属于前端示例接口，不能当作已联调契约。
+- 小程序登录调用 `POST /auth/login`，传 `clientId`、`authType: "MINI_PROGRAM"` 和 `wx.getPhoneNumber` 返回的一次性 `code`。
+- 后端返回 camelCase 的 `accessToken`、`tokenType`、`expiresIn`、`refreshToken`、`refreshExpiresIn`；普通请求由拦截器携带 `Authorization: Bearer <accessToken>` 和 `clientid`。
+- Access Token 本地过期时，请求层以 BODY 模式调用 `POST /auth/refresh`，请求体含 `refreshToken`；服务端返回 401 时同样刷新并最多重放一次。刷新失败清除登录态并唤起登录弹窗。文件上传在开始前使用同一刷新流程，避免过期令牌上传。
+- 当前用户信息由 `GET /auth/user/info` 获取。
+- 通用文件上传走 `POST /system/common/file`，multipart 字段为 `file`，响应为 `{ id, url, thUrl, metadata }`。
+- 当前后端没有小程序业务路由 `/app/material/*`；物料、领用等页面 API 不应视为已联调。
 
 如果调用方需要自行处理错误提示，可以传入 `hideErrorToast: true`：
 

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { IOssUploadRes } from '@/api/types/oss'
+import type { ICommonFileUploadRes } from '@/api/types/oss'
 import { computed, ref } from 'vue'
 import { useToast } from '@wot-ui/ui'
-import { uploadOssFile } from '@/services/upload'
+import { uploadCommonFile } from '@/services/upload'
 
 const props = withDefaults(defineProps<{
   /** 已上传文件列表（v-model） */
-  modelValue?: IOssUploadRes[]
+  modelValue?: ICommonFileUploadRes[]
   /** 最多可上传数量 */
   max?: number
   /** 单文件大小限制（MB） */
@@ -21,9 +21,9 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: IOssUploadRes[]]
+  'update:modelValue': [value: ICommonFileUploadRes[]]
   /** 单个文件上传成功 */
-  'success': [item: IOssUploadRes]
+  'success': [item: ICommonFileUploadRes]
   /** 单个文件上传失败 */
   'error': [err: Error]
 }>()
@@ -42,7 +42,7 @@ let uploadKey = 0
 
 const canAdd = computed(() => !props.disabled && props.modelValue.length + uploadingList.value.length < props.max)
 
-/** 选择文件（微信用 chooseMedia，其他端 chooseImage），逐个上传到 OSS */
+/** 选择文件（微信用 chooseMedia，其他端 chooseImage），逐个上传到后端文件服务 */
 function handleChoose() {
   if (!canAdd.value) {
     return
@@ -79,7 +79,7 @@ function startUpload(tempPath: string, size?: number) {
   const item: UploadingItem = { key: ++uploadKey, tempPath, progress: 0 }
   uploadingList.value.push(item)
 
-  uploadOssFile(tempPath, { onProgress: p => (item.progress = p) })
+  uploadCommonFile(tempPath, { onProgress: p => (item.progress = p) })
     .then((res) => {
       emit('update:modelValue', [...props.modelValue, res])
       emit('success', res)
@@ -105,7 +105,7 @@ function handlePreview(index: number) {
   <view class="flex flex-wrap gap-16rpx">
     <wd-toast />
     <!-- 已上传：缩略图 + 删除 + 点击预览 -->
-    <view v-for="(item, index) in modelValue" :key="item.ossId" class="relative h-160rpx w-160rpx">
+    <view v-for="(item, index) in modelValue" :key="item.id" class="relative h-160rpx w-160rpx">
       <image :src="item.url" mode="aspectFill" class="h-full w-full rounded-12rpx" @click="handlePreview(index)" />
       <view
         v-if="!disabled"

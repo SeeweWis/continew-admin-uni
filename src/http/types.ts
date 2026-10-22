@@ -5,8 +5,10 @@ export type CustomRequestOptions = UniApp.RequestOptions & {
   query?: Record<string, any>
   /** 出错时是否隐藏错误提示 */
   hideErrorToast?: boolean
-  /** 是否按后端 @ApiEncrypt 约定加密请求体 */
-  encrypt?: boolean
+  /** 认证会话端点不触发自动刷新 */
+  skipAuthRefresh?: boolean
+  /** 内部标记：该请求已在刷新后重放 */
+  authRefreshRetried?: boolean
 } & IUniUploadFileOptions // 添加uni.uploadFile参数类型
 
 /** 主要提供给 openapi-ts-request 生成的代码使用 */

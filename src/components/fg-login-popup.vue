@@ -19,7 +19,7 @@ const agreed = ref(false)
 const loading = ref(false)
 const username = ref('')
 const password = ref('')
-/** 图形验证码（后端关闭验证码时 captchaEnabled=false，不展示输入行） */
+/** 图形验证码（后端停用时不展示输入行） */
 const captcha = ref<ICaptcha | null>(null)
 const captchaCode = ref('')
 
@@ -70,8 +70,10 @@ async function handleWxLogin(event: { detail?: { code?: string } }) {
     toast.success('登录成功')
     close()
   }
-  catch {
-    // 失败提示由 http 层统一 toast，保持弹窗打开便于重试
+  catch (error) {
+    if (error instanceof Error)
+      toast.show(error.message)
+    // HTTP 错误提示由 http 层统一处理，保持弹窗打开便于重试
   }
   finally {
     loading.value = false
@@ -90,7 +92,7 @@ async function handleAccountLogin() {
     toast.show('请输入密码')
     return
   }
-  if (captcha.value?.captchaEnabled && !captchaCode.value.trim()) {
+  if (captcha.value?.img && !captchaCode.value.trim()) {
     toast.show('请输入验证码')
     return
   }
@@ -99,16 +101,18 @@ async function handleAccountLogin() {
     await loginByPassword({
       username: username.value.trim(),
       password: password.value,
-      code: captcha.value?.captchaEnabled ? captchaCode.value.trim() : undefined,
-      uuid: captcha.value?.captchaEnabled ? captcha.value.uuid : undefined,
+      captcha: captcha.value?.img ? captchaCode.value.trim() : undefined,
+      uuid: captcha.value?.img ? captcha.value.uuid : undefined,
     })
     toast.success('登录成功')
     close()
   }
-  catch {
+  catch (error) {
+    if (error instanceof Error)
+      toast.show(error.message)
     // 失败提示由 http 层统一 toast；验证码一次性有效，失败后换新再重试
     captchaCode.value = ''
-    if (captcha.value?.captchaEnabled)
+    if (captcha.value?.img)
       loadCaptcha()
   }
   finally {
@@ -205,7 +209,7 @@ async function handleAccountLogin() {
             :show-password="true"
           />
         </view>
-        <view v-if="captcha?.captchaEnabled" class="login-field login-field-captcha">
+        <view v-if="captcha?.isEnabled" class="login-field login-field-captcha">
           <text class="login-field-icon i-carbon-password" />
           <wd-input
             v-model="captchaCode"
@@ -216,7 +220,7 @@ async function handleAccountLogin() {
           <image
             v-if="captcha?.img"
             class="h-64rpx w-176rpx flex-none rounded-8rpx bg-#f2f3f5"
-            :src="`data:image/gif;base64,${captcha.img}`"
+            :src="captcha.img"
             mode="aspectFill"
             @click="loadCaptcha"
           />

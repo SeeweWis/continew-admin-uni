@@ -1,82 +1,59 @@
-import type { IAuthLoginRes, ILoginBody, IUserInfoRes } from '@/api/types/login'
-import { getUserInfo, login as loginApi, logout as logoutApi, register as registerApi } from '@/api/login'
+import type { IAuthLoginRes, IUserInfoRes } from '@/api/types/login'
+import { getUserInfo, login as loginApi, logout as logoutApi } from '@/api/login'
+import { encryptPassword } from '@/http/crypto'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 
-/** 客户端id：需为 sys_client 中配置且授权类型包含对应 grantType 的客户端 */
+/** 客户端 ID：需在后端客户端配置中启用对应认证类型。 */
 const CLIENT_ID = import.meta.env.VITE_APP_CLIENT_ID
 
-/**
- * 登录后统一处理：缓存 token 并拉取用户信息
- */
 async function postLogin(res: IAuthLoginRes) {
+  if (!res.accessToken || !res.expiresIn || !res.refreshToken || !res.refreshExpiresIn) {
+    throw new Error('后端未返回完整登录令牌，请检查小程序客户端的 Refresh Token 配置')
+  }
   useTokenStore().setTokenInfo({
-    token: res.access_token,
-    expiresIn: res.expire_in,
-    openid: res.openid,
+    token: res.accessToken,
+    tokenType: res.tokenType,
+    expiresIn: res.expiresIn,
+    refreshToken: res.refreshToken,
+    refreshExpiresIn: res.refreshExpiresIn,
   })
-  await fetchUserInfo()
+  try {
+    await fetchUserInfo()
+  }
+  catch (error) {
+    useTokenStore().clear()
+    useUserStore().clearUserInfo()
+    throw error
+  }
 }
 
 /**
- * 调用 wx.login 获取微信授权 code
- */
-function getWxCode() {
-  return new Promise<string>((resolve, reject) => {
-    uni.login({
-      provider: 'weixin',
-      success: res => resolve(res.code),
-      fail: err => reject(new Error(err.errMsg || '微信登录凭证获取失败')),
-    })
-  })
-}
-
-/**
- * 账号密码登录
- */
-export async function loginByPassword(form: { username: string, password: string, code?: string, uuid?: string }) {
-  const body: ILoginBody = { clientId: CLIENT_ID, grantType: 'password', ...form }
-  const res = await loginApi(body)
-  await postLogin(res)
-  return res
-}
-
-/**
- * 微信小程序一键登录（wx.login 取 code → 后端换取 token）
- * appid/appsecret 由后端 sys_config 或 justauth yml 配置决定，前端不传
+ * 微信小程序一键登录：wx.getPhoneNumber 授权码由后端兑换手机号。
  */
 export async function loginByWechat(phoneCode: string) {
-  const xcxCode = await getWxCode()
-  const body: ILoginBody = {
+  const res = await loginApi({
     clientId: CLIENT_ID,
-    grantType: 'xcx',
-    xcxCode,
-    phoneCode,
-  }
-  const res = await loginApi(body)
+    authType: 'MINI_PROGRAM',
+    code: phoneCode,
+  })
   await postLogin(res)
   return res
 }
 
-/**
- * 用户注册
- */
-export async function registerAccount(data: { username: string, password: string }) {
-  return registerApi({ clientId: CLIENT_ID, grantType: 'password', ...data })
+export async function loginByPassword(form: { username: string, password: string, captcha?: string, uuid?: string }) {
+  const res = await loginApi({ clientId: CLIENT_ID, authType: 'ACCOUNT', ...form, password: encryptPassword(form.password, import.meta.env.VITE_API_ENCRYPT_PUBLIC_KEY) })
+  await postLogin(res)
+  return res
 }
 
-/**
- * 获取当前登录用户信息并写入用户 store 缓存
- * @returns 映射后的用户信息
- */
 export async function fetchUserInfo(): Promise<IUserInfoRes> {
   const res = await getUserInfo()
-  const user = res.user
   const userInfo: IUserInfoRes = {
-    userId: user.userId,
-    username: user.userName,
-    nickname: user.nickName,
-    avatar: user.avatar,
+    userId: res.id,
+    username: res.username,
+    nickname: res.nickname,
+    avatar: res.avatar,
     roles: res.roles,
     permissions: res.permissions,
   }
@@ -84,18 +61,18 @@ export async function fetchUserInfo(): Promise<IUserInfoRes> {
   return userInfo
 }
 
-/**
- * 退出登录：请求后端注销（失败不阻塞），无论成败都清除本地登录态
- */
 export async function logout() {
+  const tokenStore = useTokenStore()
+  const refreshToken = tokenStore.tokenInfo.refreshToken
   try {
-    await logoutApi()
+    if (refreshToken)
+      await logoutApi(refreshToken)
   }
   catch (error) {
     console.error('退出登录失败:', error)
   }
   finally {
-    useTokenStore().clear()
+    tokenStore.clear()
     useUserStore().clearUserInfo()
   }
 }

@@ -3,8 +3,67 @@ import { useUserStore } from '@/store/user'
 import { useTokenStore } from '@/store/token'
 import { openLoginPopup } from '@/utils/loginPopup'
 import { createHttpError, getResponseMessage, HttpErrorType, isSuccessResultCode, ResultEnum, ShowMessage } from './tools/enum'
+import { refreshToken as refreshTokenApi } from '@/api/login'
+
+let refreshPromise: Promise<void> | undefined
+
+export async function refreshAccessToken() {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const tokenStore = useTokenStore()
+      const refreshToken = tokenStore.tokenInfo.refreshToken
+      const refreshExpiry = uni.getStorageSync('refreshTokenExpireTime')
+      if (!refreshToken || !refreshExpiry || Date.now() >= refreshExpiry)
+        throw new Error('刷新令牌已过期')
+
+      const result = await refreshTokenApi(refreshToken)
+      if (!result.accessToken || !result.expiresIn)
+        throw new Error('刷新响应缺少访问令牌')
+      tokenStore.setTokenInfo({
+        token: result.accessToken,
+        tokenType: result.tokenType,
+        expiresIn: result.expiresIn,
+        refreshToken: result.refreshToken || refreshToken,
+        refreshExpiresIn: result.refreshExpiresIn ?? Math.max(0, Math.floor((refreshExpiry - Date.now()) / 1000)),
+      })
+    })().finally(() => {
+      refreshPromise = undefined
+    })
+  }
+  return refreshPromise
+}
+
+export async function ensureAccessToken() {
+  const tokenStore = useTokenStore().updateNowTime()
+  if (!tokenStore.validToken && tokenStore.tokenInfo.token && tokenStore.tokenInfo.refreshToken) {
+    try {
+      await refreshAccessToken()
+    }
+    catch (error) {
+      clearExpiredSession()
+      throw createHttpError({
+        type: HttpErrorType.Auth,
+        message: error instanceof Error ? error.message : '登录已过期，请重新登录',
+        raw: error,
+      })
+    }
+  }
+}
+
+function clearExpiredSession() {
+  useTokenStore().clear()
+  useUserStore().clearUserInfo()
+  openLoginPopup()
+}
 
 export function http<T>(options: CustomRequestOptions) {
+  if (!options.skipAuthRefresh) {
+    return ensureAccessToken().then(() => sendRequest<T>(options))
+  }
+  return sendRequest<T>(options)
+}
+
+function sendRequest<T>(options: CustomRequestOptions) {
   // 1. 返回 Promise 对象
   return new Promise<T>((resolve, reject) => {
     uni.request({
@@ -22,18 +81,43 @@ export function http<T>(options: CustomRequestOptions) {
         const isTokenExpired = res.statusCode === 401 || code === ResultEnum.Unauthorized
 
         if (isTokenExpired) {
-          // 单token模式：登录失效，仅清除本地登录态（会话已在服务端失效，无需请求退出接口）并唤起登录弹窗；
-          // 后端按失效类型返回具体原因（登录已过期 / 被其他设备挤下线 / 被强制下线），提示用户
+          if (!options.skipAuthRefresh && !options.authRefreshRetried && useTokenStore().tokenInfo.refreshToken) {
+            try {
+              await refreshAccessToken()
+            }
+            catch {
+              clearExpiredSession()
+              return reject(createHttpError({
+                type: HttpErrorType.Auth,
+                code,
+                statusCode: res.statusCode,
+                message: getResponseMessage(responseData, '登录已过期，请重新登录'),
+                data: responseData?.data,
+                raw: res,
+              }))
+            }
+            return http<T>({ ...options, authRefreshRetried: true }).then(resolve, reject)
+          }
+
+          if (options.skipAuthRefresh) {
+            return reject(createHttpError({
+              type: HttpErrorType.Auth,
+              code,
+              statusCode: res.statusCode,
+              message: getResponseMessage(responseData, '登录已过期，请重新登录'),
+              data: responseData?.data,
+              raw: res,
+            }))
+          }
+
           const authMessage = getResponseMessage(responseData, '登录已过期，请重新登录')
           uni.showToast({ icon: 'none', title: authMessage })
-          useTokenStore().clear()
-          useUserStore().clearUserInfo()
-          openLoginPopup()
+          clearExpiredSession()
           return reject(createHttpError({
             type: HttpErrorType.Auth,
             code,
             statusCode: res.statusCode,
-            message: getResponseMessage(responseData, '登录已过期，请重新登录'),
+            message: authMessage,
             data: responseData?.data,
             raw: res,
           }))

@@ -50,14 +50,13 @@ catch 到的永远是 `HttpError`,`type` 四选一,按需分支:
 await httpPost('/log/track', payload, undefined, undefined, { hideErrorToast: true })
 ```
 
-## 4. 401 / token(业务零处理)
+## 4. 401 / token
 
-由 `http.ts` 统一处理,受 `env/.env` 的 `VITE_AUTH_MODE` 控制:
+当前小程序对接 ContiNew Admin 时，登录响应使用 `accessToken`、`tokenType`、`expiresIn`、`refreshToken`、`refreshExpiresIn`。普通请求由拦截器注入 `Authorization` 与 `clientid`。
 
-- `single`:清用户态 → 跳登录页
-- `double`:用 refreshToken 无感刷新(并发请求进队列,刷新成功后自动重放;失败才登出)
+Access Token 返回 401 后，请求层以 BODY 模式调用 `POST /auth/refresh`，在请求体传入 `refreshToken`，并发请求共用一次刷新；刷新成功后重放原请求。刷新失败才清空用户态并打开登录弹窗。认证 API 自身及已重放请求不会再次触发刷新。
 
-**业务代码不要自行处理 401,也不要读 store 手动拼 Authorization。**
+业务页面不要自行读 store 手动拼 Authorization 或处理 401。
 
 ## 5. 地址与环境
 

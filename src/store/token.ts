@@ -1,19 +1,23 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-/** 本地缓存的令牌信息（单 token 模式） */
+/** 本地缓存的访问令牌和刷新令牌 */
 export interface ITokenInfo {
   token: string
+  tokenType: string
   /** 有效期（秒） */
   expiresIn: number
-  /** 微信 openid（小程序登录时返回） */
-  openid?: string
+  refreshToken: string
+  refreshExpiresIn: number
 }
 
 // 初始化状态（单 token 模式）
 const tokenInfoState: ITokenInfo = {
   token: '',
+  tokenType: 'Bearer',
   expiresIn: 0,
+  refreshToken: '',
+  refreshExpiresIn: 0,
 }
 
 /**
@@ -45,6 +49,7 @@ export const useTokenStore = defineStore(
       updateNowTime()
       tokenInfo.value = val
       uni.setStorageSync('accessTokenExpireTime', Date.now() + val.expiresIn * 1000)
+      uni.setStorageSync('refreshTokenExpireTime', Date.now() + val.refreshExpiresIn * 1000)
     }
 
     /**
@@ -54,6 +59,7 @@ export const useTokenStore = defineStore(
       updateNowTime()
       // 清除存储的过期时间
       uni.removeStorageSync('accessTokenExpireTime')
+      uni.removeStorageSync('refreshTokenExpireTime')
       tokenInfo.value = { ...tokenInfoState }
       uni.removeStorageSync('token')
     }
@@ -86,12 +92,17 @@ export const useTokenStore = defineStore(
       return !!tokenInfo.value?.token
     })
 
+    const hasValidRefreshToken = computed(() => {
+      const expireTime = uni.getStorageSync('refreshTokenExpireTime')
+      return !!tokenInfo.value.refreshToken && !!expireTime && nowTime.value < expireTime
+    })
+
     /**
      * 检查是否已登录且token有效
      * 建议这样使用tokenStore.updateNowTime().hasLogin
      */
     const hasValidLogin = computed(() => {
-      return hasLoginInfo.value && !isTokenExpired.value
+      return hasLoginInfo.value && (!isTokenExpired.value || hasValidRefreshToken.value)
     })
 
     return {

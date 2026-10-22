@@ -26,7 +26,7 @@ const displayName = computed(() => userInfo.value.nickname || userInfo.value.use
 
 // 下拉刷新：重新拉取当前登录用户信息（未登录时忽略）
 usePageRefresh(async () => {
-  if (!tokenStore.hasLogin) {
+  if (!tokenStore.updateNowTime().hasLogin) {
     return
   }
   await fetchUserInfo()
