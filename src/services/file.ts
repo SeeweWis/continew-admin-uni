@@ -37,9 +37,9 @@ function uploadMultipart<T>(url: string, filePath: string, options: UploadReques
       filePath,
       name: 'file',
       success: (response) => {
-        let result: { code?: number, msg?: string, data?: T }
+        let result: { code?: number | string, msg?: string, data?: T }
         try {
-          result = JSON.parse(response.data) as { code?: number, msg?: string, data?: T }
+          result = JSON.parse(response.data) as { code?: number | string, msg?: string, data?: T }
         }
         catch {
           reject(new Error('上传响应解析失败'))

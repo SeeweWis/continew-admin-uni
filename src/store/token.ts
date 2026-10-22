@@ -94,10 +94,14 @@ export const useTokenStore = defineStore(
      * 判断token是否过期
      */
     const isTokenExpired = computed(() => {
+      // 必须先读取响应式 nowTime：storage 中的过期时间不是响应式的，
+      // 若首次评估时直接 return（无过期时间），computed 会因没有依赖而永久缓存，
+      // 导致登录写入 token 后 validToken 仍一直为空。
+      const now = nowTime.value
       const expireTime = getAccessTokenExpireTime()
       if (!expireTime)
         return true
-      return nowTime.value >= expireTime
+      return now >= expireTime
     })
 
     /**

@@ -23,7 +23,7 @@ export interface HttpRequestResult<T> {
 
 export interface HttpError<T = unknown> {
   type: 'business' | 'auth' | 'http' | 'network'
-  code?: number
+  code?: number | string
   statusCode?: number
   message: string
   data?: T
@@ -32,12 +32,12 @@ export interface HttpError<T = unknown> {
 
 // 通用响应格式（兼容 msg + message 字段）
 export type IResponse<T = unknown> = {
-  code: number
+  code: number | string
   data: T
   message: string
   [key: string]: unknown // 允许额外属性
 } | {
-  code: number
+  code: number | string
   data: T
   msg: string
   [key: string]: unknown // 允许额外属性

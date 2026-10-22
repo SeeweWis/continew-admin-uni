@@ -294,10 +294,10 @@ async function uploadFile<T>({
       success: (uploadFileRes) => {
         try {
           // 解析响应数据（R 信封：{ code, msg, data }）
-          const result = JSON.parse(uploadFileRes.data) as { code?: number, msg?: string, data?: T }
+          const result = JSON.parse(uploadFileRes.data) as { code?: number | string, msg?: string, data?: T }
 
           // 登录态失效与 http 层同语义：清除本地登录态并唤起登录弹窗
-          if (uploadFileRes.statusCode === 401 || result.code === ResultEnum.Unauthorized) {
+          if (uploadFileRes.statusCode === 401 || Number(result.code) === ResultEnum.Unauthorized) {
             const message = getResponseMessage(result, '登录已过期，请重新登录')
             uni.showToast({ icon: 'none', title: message })
             useTokenStore().clear()
@@ -309,7 +309,7 @@ async function uploadFile<T>({
           }
 
           // 业务失败：展示后端提示
-          if (uploadFileRes.statusCode < 200 || uploadFileRes.statusCode >= 300 || !isSuccessResultCode(result.code as number)) {
+          if (uploadFileRes.statusCode < 200 || uploadFileRes.statusCode >= 300 || !isSuccessResultCode(result.code ?? -1)) {
             const message = getResponseMessage(result)
             uni.showToast({ icon: 'none', title: message })
             error.value = true

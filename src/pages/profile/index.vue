@@ -36,7 +36,20 @@ usePageRefresh(async () => {
   await fetchUserInfo()
 })
 const displayName = computed(() => userInfo.value.nickname || userInfo.value.username || '未登录')
-const roleLabel = computed(() => userInfo.value.roles?.[0] || '')
+/** 角色名优先取 roleNames，缺失时回退角色编码 */
+const roleLabels = computed(() => {
+  const names = userInfo.value.roleNames?.length ? userInfo.value.roleNames : userInfo.value.roles
+  return (names || []).filter(Boolean)
+})
+const visibleRoleLabels = computed(() => roleLabels.value.slice(0, 2))
+const extraRoleCount = computed(() => Math.max(0, roleLabels.value.length - 2))
+/** 卡片信息栅格：未绑定的字段给出占位，避免信息区留白 */
+const infoItems = computed(() => [
+  { label: '手机号', value: userInfo.value.phone || '未绑定', icon: 'i-carbon-mobile', tone: 'text-#165DFF bg-#E8F3FF' },
+  { label: '所属部门', value: userInfo.value.deptName || '未分配', icon: 'i-carbon-building', tone: 'text-#0FC6C2 bg-#E8FFFB' },
+  { label: '注册时间', value: userInfo.value.registrationDate || '—', icon: 'i-carbon-calendar', tone: 'text-#FF7D00 bg-#FFF3E8' },
+  { label: '邮箱', value: userInfo.value.email || '未绑定', icon: 'i-carbon-email', tone: 'text-#722ED1 bg-#F5F0FF' },
+])
 /** 远程头像直接展示，本地默认图与空值回退为首字圆形 */
 const avatarUrl = computed(() => {
   const avatar = userInfo.value.avatar
@@ -64,11 +77,6 @@ function guardNavigate(route: string) {
   uni.navigateTo({ url: route })
 }
 
-// 登录：唤起全局登录弹窗（微信一键登录）
-function handleLogin() {
-  openLoginPopup()
-}
-
 async function handleLogout() {
   if (!(await confirmDialog('确定要退出登录吗？'))) {
     return
@@ -83,15 +91,15 @@ async function handleLogout() {
 <template>
   <!-- 背景与最小高度由 App.ku.vue 全局壳统一控制 -->
   <view class="p-32rpx">
-    <!-- 用户卡片：未登录为登录引导态 -->
+    <!-- 用户卡片：未登录为登录引导态，已登录展示账号与基础资料 -->
     <view
       class="relative overflow-hidden border border-#f2f3f5 rounded-16px bg-white p-30rpx transition-transform duration-120 active:scale-99"
-      @click="!loggedIn && handleLogin()"
+      @click="guardNavigate('/pages-profile/info/index')"
     >
       <text class="pointer-events-none absolute text-260rpx text-#165DFF/4 font-bold leading-none -right-20rpx -top-64rpx">
         S
       </text>
-      <view class="relative flex items-center">
+      <view class="relative flex items-start">
         <image
           v-if="loggedIn && avatarUrl"
           :src="avatarUrl"
@@ -107,26 +115,41 @@ async function handleLogout() {
           <text v-else class="i-carbon-user-avatar" />
         </view>
         <view class="ml-24rpx min-w-0 flex-1">
-          <view class="flex items-center gap-14rpx">
-            <text class="overflow-hidden text-ellipsis whitespace-nowrap text-34rpx text-#1D2129 font-bold">
+          <view class="flex flex-wrap items-center gap-10rpx">
+            <text class="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-34rpx text-#1D2129 font-bold">
               {{ loggedIn ? displayName : '未登录' }}
             </text>
             <view
-              v-if="loggedIn && roleLabel"
+              v-for="role in visibleRoleLabels"
+              :key="role"
               class="flex-none rounded-8rpx bg-#E8F3FF px-12rpx py-4rpx text-20rpx text-#165DFF"
             >
-              {{ roleLabel }}
+              {{ role }}
             </view>
+            <text v-if="extraRoleCount" class="flex-none text-20rpx text-#86909C">+{{ extraRoleCount }}</text>
           </view>
           <text class="mt-10rpx block text-24rpx text-#86909C">
             {{ loggedIn ? `账号 ${userInfo.username}` : '点击登录，使用模板能力' }}
           </text>
         </view>
-        <text
-          v-if="loggedIn"
-          class="i-carbon-chevron-right flex-none text-28rpx text-#86909C"
-          @click.stop="guardNavigate('/pages-profile/info/index')"
-        />
+        <text v-if="loggedIn" class="i-carbon-chevron-right mt-4rpx flex-none text-28rpx text-#86909C" />
+      </view>
+
+      <!-- 已登录：基础资料栅格 -->
+      <view v-if="loggedIn" class="relative mt-26rpx border-t border-#F2F3F5 pt-24rpx">
+        <view class="grid grid-cols-2 gap-x-16rpx gap-y-22rpx">
+          <view v-for="item in infoItems" :key="item.label" class="min-w-0 flex items-center gap-14rpx">
+            <view class="h-52rpx w-52rpx flex flex-none items-center justify-center rounded-14rpx text-26rpx" :class="item.tone">
+              <text :class="item.icon" />
+            </view>
+            <view class="min-w-0 flex-1">
+              <text class="block text-20rpx text-#86909C">{{ item.label }}</text>
+              <text class="mt-2rpx block w-full overflow-hidden text-ellipsis whitespace-nowrap text-24rpx text-#1D2129 font-semibold">
+                {{ item.value }}
+              </text>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
 

@@ -80,7 +80,7 @@ function sendRequest<T>(options: CustomRequestOptions) {
         const code = responseData?.code
 
         // 检查是否是401错误（包括HTTP状态码401或业务码401）
-        const isTokenExpired = res.statusCode === 401 || code === ResultEnum.Unauthorized
+        const isTokenExpired = res.statusCode === 401 || Number(code) === ResultEnum.Unauthorized
 
         if (isTokenExpired) {
           if (!options.skipAuthRefresh && !options.authRefreshRetried && useTokenStore().tokenInfo.refreshToken) {

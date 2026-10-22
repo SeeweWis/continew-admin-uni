@@ -30,8 +30,10 @@ export enum HttpErrorType {
   Network = 'network',
 }
 
-export function isSuccessResultCode(code: number): boolean {
-  return [ResultEnum.Success0, ResultEnum.Success200].includes(code)
+export function isSuccessResultCode(code: number | string): boolean {
+  // 后端 R 信封的 code 为字符串（如 "0"），需统一转数字后比较
+  const normalized = Number(code)
+  return normalized === ResultEnum.Success0 || normalized === ResultEnum.Success200
 }
 
 export function getResponseMessage(responseData: Partial<IResponse<unknown>> | undefined, fallback = '请求错误'): string {
