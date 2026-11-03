@@ -172,11 +172,12 @@ async function handleAccountLogin() {
       <!-- 微信一键登录 -->
       <view v-if="activeTab === 'wechat'" class="login-actions">
         <wd-button
+          round
           block
           :loading="loading"
           :disabled="loading"
           open-type="getPhoneNumber"
-          custom-style="height:96rpx;border:none;border-radius:24rpx;background:#165DFF;color:#ffffff;font-size:30rpx;font-weight:600;box-shadow:0 12rpx 28rpx rgba(22,93,255,0.22);"
+          custom-style="height:96rpx;border:none;background:#165DFF;color:#ffffff;font-size:30rpx;font-weight:600;box-shadow:0 12rpx 28rpx rgba(22,93,255,0.22);"
           @getphonenumber="handleWxLogin"
         >
           <view class="login-submit-content">
@@ -228,10 +229,11 @@ async function handleAccountLogin() {
           />
         </view>
         <wd-button
+          round
           block
           :loading="loading"
           :disabled="loading"
-          custom-style="height:96rpx;border:none;border-radius:24rpx;background:#165DFF;color:#ffffff;font-size:30rpx;font-weight:600;box-shadow:0 12rpx 28rpx rgba(22,93,255,0.22);margin-top:28rpx;"
+          custom-style="height:96rpx;border:none;background:#165DFF;color:#ffffff;font-size:30rpx;font-weight:600;box-shadow:0 12rpx 28rpx rgba(22,93,255,0.22);margin-top:28rpx;"
           @click="handleAccountLogin"
         >
           登录
@@ -248,6 +250,8 @@ async function handleAccountLogin() {
       </view>
 
       <wd-button
+
+        round
         block
         variant="text"
         type="info"

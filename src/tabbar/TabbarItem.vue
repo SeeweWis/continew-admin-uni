@@ -31,7 +31,7 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
       <view :class="[item.icon, isBulge ? 'text-26px' : 'text-20px']" />
     </template>
     <template v-if="item.iconType === 'image'">
-      <image :src="getImageByIndex(index, item)" mode="scaleToFill" :class="isBulge ? 'h-80px w-80px' : 'h-24px w-24px'" />
+      <image :src="getImageByIndex(index, item)" mode="aspectFit" :class="isBulge ? 'h-32px w-32px' : 'h-24px w-24px'" />
     </template>
     <view v-if="!isBulge" class="mt-2px text-12px">
       {{ getI18nText(item.text) }}

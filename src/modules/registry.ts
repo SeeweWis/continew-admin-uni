@@ -34,7 +34,7 @@ export const modules: ModuleManifest[] = [
         hint: '处理待审批申请',
         icon: 'i-carbon-task-approved',
         tone: 'amber',
-        route: '/pages-work/approval/detail/index',
+        route: '/pages-workbench/approval/detail/index',
         roles: ['leader'],
         permissions: ['material:requisition:audit'],
       },
@@ -117,7 +117,7 @@ export const modules: ModuleManifest[] = [
         hint: '培训学习入口',
         icon: 'i-carbon-education',
         tone: 'teal',
-        route: '/pages-work/training/index',
+        route: '/pages-workbench/training/index',
         roles: ['*'],
       },
       {

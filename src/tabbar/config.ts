@@ -30,10 +30,16 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     text: '%tabbar.home%',
   },
   {
-    iconPath: 'static/tabbar/scan.png',
-    selectedIconPath: 'static/tabbar/scan.png',
-    pagePath: 'pages/scan/index',
-    text: '%tabbar.scan%',
+    iconPath: 'static/tabbar/workbench.png',
+    selectedIconPath: 'static/tabbar/workbenchHL.png',
+    pagePath: 'pages/dashboard/index',
+    text: '%tabbar.dashboard%',
+  },
+  {
+    iconPath: 'static/tabbar/message.png',
+    selectedIconPath: 'static/tabbar/messageHL.png',
+    pagePath: 'pages/message/index',
+    text: '%tabbar.message%',
   },
   {
     iconPath: 'static/tabbar/personal.png',
@@ -49,20 +55,20 @@ export const customTabbarList: CustomTabBarItem[] = [
   {
     text: '%tabbar.home%',
     pagePath: 'pages/work/index',
-    // 注意 unocss 图标需要如下处理：（二选一）
-    // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
-    // 2）配置到 unocss.config.ts 的 safelist 中
     iconType: 'unocss',
     icon: 'i-carbon-home',
-    // badge: 'dot',
   },
-  // 中央鼓包：模板示例入口
   {
-    text: '%tabbar.scan%',
-    pagePath: 'pages/scan/index',
+    text: '%tabbar.dashboard%',
+    pagePath: 'pages/dashboard/index',
     iconType: 'unocss',
-    icon: 'i-carbon-scan',
-    isBulge: true,
+    icon: 'i-carbon-dashboard',
+  },
+  {
+    text: '%tabbar.message%',
+    pagePath: 'pages/message/index',
+    iconType: 'unocss',
+    icon: 'i-carbon-notification',
   },
   {
     pagePath: 'pages/profile/index',

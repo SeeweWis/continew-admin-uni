@@ -1,6 +1,7 @@
 {
   "tabbar.home": "首页",
-  "tabbar.scan": "扫码",
+  "tabbar.dashboard": "仪表盘",
+  "tabbar.message": "消息",
   "tabbar.about": "关于模板",
   "tabbar.me": "我的",
   "tabbar.i18n": "多语言",

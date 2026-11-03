@@ -125,10 +125,10 @@ function goOrder(orderId: string) {
       </view>
 
       <MaterialBottomBar>
-        <wd-button plain custom-class="flex-1" @click="goInbound">
+        <wd-button round plain custom-class="flex-1" @click="goInbound">
           入库登记
         </wd-button>
-        <wd-button type="primary" custom-class="flex-1" @click="goApply">
+        <wd-button round type="primary" custom-class="flex-1" @click="goApply">
           申请领用
         </wd-button>
       </MaterialBottomBar>

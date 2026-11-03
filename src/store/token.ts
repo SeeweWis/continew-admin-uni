@@ -54,6 +54,7 @@ export const useTokenStore = defineStore(
   'token',
   () => {
     const tokenInfo = ref<ITokenInfo>({ ...tokenInfoState })
+    const sessionVersion = ref(0)
 
     // 添加一个时间戳 ref 作为响应式依赖
     const nowTime = ref(Date.now())
@@ -71,7 +72,9 @@ export const useTokenStore = defineStore(
     /**
      * 写入 token 并记录过期时间
      */
-    const setTokenInfo = (val: ITokenInfo) => {
+    const setTokenInfo = (val: ITokenInfo, preserveSession = false) => {
+      if (!preserveSession)
+        sessionVersion.value++
       updateNowTime()
       tokenInfo.value = val
       uni.setStorageSync(ACCESS_TOKEN_EXPIRE_KEY, Date.now() + val.expiresIn * 1000)
@@ -82,6 +85,7 @@ export const useTokenStore = defineStore(
      * 清除本地登录态
      */
     const clear = () => {
+      sessionVersion.value++
       updateNowTime()
       // 清除存储的过期时间
       uni.removeStorageSync(ACCESS_TOKEN_EXPIRE_KEY)
@@ -144,6 +148,7 @@ export const useTokenStore = defineStore(
 
       // 调试或特殊场景可能需要直接访问的信息
       tokenInfo,
+      sessionVersion,
       setTokenInfo,
       clear,
       updateNowTime,
@@ -151,6 +156,6 @@ export const useTokenStore = defineStore(
   },
   {
     // 添加持久化配置，确保刷新页面后token信息不丢失
-    persist: true,
+    persist: { paths: ['tokenInfo'] },
   },
 )

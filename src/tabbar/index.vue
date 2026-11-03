@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-// i-carbon-code
 import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
 import { setTabbarItem } from './i18n'
 import { tabbarList, tabbarStore } from './store'
 import TabbarItem from './TabbarItem.vue'
-
 // #ifdef MP-WEIXIN
 // 将自定义节点设置成虚拟的（去掉自定义组件包裹层），更加接近Vue组件的表现，能更好的使用flex属性
 defineOptions({
@@ -13,48 +11,39 @@ defineOptions({
 })
 // #endif
 
-const scanMenuOpen = ref(false)
-
-const scanActions = [
-  { label: '表单示例', icon: 'i-carbon-box', className: 'scan-action-center', route: '/pages-material/requisition/apply/index' },
-  { label: '列表示例', icon: 'i-carbon-download', className: 'scan-action-right', route: '/pages-material/requisition/list/index' },
+const menuOpen = ref(false)
+const quickActions = [
+  { key: 'scan', label: '扫码', icon: 'i-carbon-scan', route: '/pages-scan/index' },
+  { key: 'workbench', label: '工作台', icon: 'i-carbon-apps', route: '/pages-workbench/index' },
+  { key: 'approval', label: '审批中心', icon: 'i-carbon-task-approved', route: '/pages-approval/index' },
 ]
 
-function closeScanMenu() {
-  scanMenuOpen.value = false
+function closeMenu() {
+  menuOpen.value = false
 }
 
-function handleScanAction(action: typeof scanActions[number]) {
-  closeScanMenu()
-  uni.navigateTo({ url: action.route })
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
 }
 
-/** tabbarItem 点击事件：中央鼓包展开模板示例菜单 */
+function openAction(route: string) {
+  closeMenu()
+  uni.navigateTo({ url: route })
+}
+
 function handleClick(index: number) {
-  const list = tabbarList.value
-  const item = list[index]
-  if (!item) {
+  const item = tabbarList.value[index]
+  if (!item)
     return
-  }
-
-  if (item.isBulge) {
-    scanMenuOpen.value = !scanMenuOpen.value
+  closeMenu()
+  if (index === tabbarStore.curIdx)
     return
-  }
-
-  closeScanMenu()
-  if (index === tabbarStore.curIdx) {
-    return
-  }
-
   const url = item.pagePath
   tabbarStore.setCurIdx(index)
-  if (tabbarCacheEnable) {
+  if (tabbarCacheEnable)
     uni.switchTab({ url })
-  }
-  else {
+  else
     uni.navigateTo({ url })
-  }
 }
 // #ifndef MP-WEIXIN || MP-ALIPAY
 // 因为有了 custom:true， 微信里面不需要多余的hide操作
@@ -90,48 +79,47 @@ function getColorByIndex(index: number) {
 onShow(() => {
   setTabbarItem()
 })
+onHide(closeMenu)
 </script>
 
 <template>
   <view v-if="customTabbarEnable" class="h-56px pb-safe">
-    <!-- 常驻渲染 + is-open 类切换，保证展开/收起过渡动画生效 -->
-    <view
-      class="scan-menu-mask"
-      :class="{ 'is-open': scanMenuOpen }"
-      @click="closeScanMenu"
-      @touchmove.stop.prevent
-    />
-    <view class="scan-menu" :class="{ 'is-open': scanMenuOpen }" @touchmove.stop.prevent>
+    <view class="fan-menu-mask" :class="{ 'is-open': menuOpen }" @click="closeMenu" @touchmove.stop.prevent />
+    <view class="fan-menu" :class="{ 'is-open': menuOpen }" @touchmove.stop.prevent>
       <view
-        v-for="action in scanActions"
-        :key="action.label"
-        class="scan-action"
-        :class="action.className"
-        @click.stop="handleScanAction(action)"
+        v-for="action in quickActions"
+        :key="action.key"
+        class="fan-action"
+        :class="`fan-action-${action.key}`"
+        @click.stop="openAction(action.route)"
       >
-        <view class="scan-action-icon">
+        <view class="fan-action-icon">
           <text :class="action.icon" />
-          <text class="scan-action-label">
-            {{ action.label }}
-          </text>
         </view>
+        <text class="fan-action-label">{{ action.label }}</text>
       </view>
     </view>
     <view class="capsule-fixed rounded-full bg-white" @touchmove.stop.prevent>
       <view class="h-56px flex items-center px-2">
         <view
-          v-for="(item, index) in tabbarList" :key="index"
+          v-for="(item, index) in tabbarList.slice(0, 2)" :key="item.pagePath"
           class="flex flex-1 flex-col items-center justify-center"
           :style="{ color: getColorByIndex(index) }"
           @click="handleClick(index)"
         >
-          <view v-if="item.isBulge" class="relative">
-            <!-- 中间一个鼓包tabbarItem的处理 -->
-            <view class="bulge" :class="{ 'bulge-open': scanMenuOpen }">
-              <TabbarItem :item="item" :index="index" class="text-center" is-bulge />
-            </view>
-          </view>
-          <TabbarItem v-else :item="item" :index="index" class="relative px-3 text-center" />
+          <TabbarItem :item="item" :index="index" class="relative px-1 text-center" />
+        </view>
+        <view class="w-120rpx flex-none" />
+        <view
+          v-for="(item, index) in tabbarList.slice(2)" :key="item.pagePath"
+          class="flex flex-1 flex-col items-center justify-center"
+          :style="{ color: getColorByIndex(index + 2) }"
+          @click="handleClick(index + 2)"
+        >
+          <TabbarItem :item="item" :index="index + 2" class="relative px-1 text-center" />
+        </view>
+        <view class="bulge" :class="{ 'bulge-open': menuOpen }" aria-label="展开功能菜单" @click.stop="toggleMenu">
+          <text class="i-carbon-apps text-32px" />
         </view>
       </view>
     </view>
@@ -145,7 +133,7 @@ onShow(() => {
   bottom: calc(env(safe-area-inset-bottom) + 16px);
   left: 32rpx;
   right: 32rpx;
-  z-index: 1000;
+  z-index: 1003;
   box-sizing: border-box;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.12);
 }
@@ -154,7 +142,7 @@ onShow(() => {
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translate(-50%, -66%);
+  transform: translate(-50%, -45%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -171,7 +159,7 @@ onShow(() => {
     box-shadow 0.2s ease;
 
   &:active {
-    transform: translate(-50%, -64%) scale(0.94);
+    transform: translate(-50%, -43%) scale(0.94);
     box-shadow: 0 6rpx 14rpx rgba(22, 93, 255, 0.3);
   }
 }
@@ -180,11 +168,11 @@ onShow(() => {
   box-shadow: 0 8rpx 20rpx rgba(22, 93, 255, 0.25);
 }
 
-.scan-menu-mask {
+.fan-menu-mask {
   position: fixed;
   inset: 0;
   z-index: 1001;
-  background: rgba(16, 30, 26, 0.28);
+  background: rgba(16, 30, 45, 0.32);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
@@ -195,118 +183,87 @@ onShow(() => {
   }
 }
 
-.scan-menu {
+.fan-menu {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 122rpx + 16px);
+  bottom: calc(env(safe-area-inset-bottom) + 72px);
   left: 50%;
   z-index: 1002;
-  width: 560rpx;
-  height: 340rpx;
+  width: 600rpx;
+  height: 470rpx;
+  max-width: 100vw;
+  opacity: 0;
   pointer-events: none;
   transform: translateX(-50%);
+  transition: opacity 0.2s ease;
+
+  &.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    .fan-action {
+      opacity: 1;
+      transform: translateX(-50%) translate(0, 0) scale(1);
+    }
+  }
 }
 
-.scan-menu::before {
+.fan-action {
   position: absolute;
-  bottom: 35rpx;
-  left: 50%;
-  width: 470rpx;
-  height: 220rpx;
-  border-top: 4rpx solid rgba(255, 255, 255, 0.72);
-  border-radius: 50%;
-  content: '';
-  pointer-events: none;
-  transform: translateX(-50%);
-}
-
-.scan-action {
-  position: absolute;
+  z-index: 1;
   display: flex;
   align-items: center;
   width: 150rpx;
   flex-direction: column;
-  z-index: 1;
-  // 收起态：缩向中央鼓包原点并隐藏；展开时带回弹的扇形过渡
+  text-align: center;
   opacity: 0;
-  pointer-events: none;
-  transform: scale(0.3);
   transition:
-    transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1),
-    opacity 0.18s ease;
+    opacity 0.2s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.scan-action-left {
-  bottom: 24rpx;
-  left: 0;
-  transform: translate(210rpx, 110rpx) scale(0.3);
-}
-
-.scan-action-center {
-  bottom: 148rpx;
-  left: 50%;
-  transform: translateX(-50%) translateY(150rpx) scale(0.3);
-}
-
-.scan-action-right {
-  right: 0;
-  bottom: 24rpx;
-  transform: translate(-210rpx, 110rpx) scale(0.3);
-}
-
-/* 展开态：错峰展开（中钮先弹出，左右随后扇开）；收起时无延迟快速归位 */
-.scan-menu.is-open {
-  .scan-action {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .scan-action-center {
-    transform: translateX(-50%);
-    transition-delay: 0ms;
-  }
-
-  .scan-action-left {
-    transform: none;
-    transition-delay: 60ms;
-  }
-
-  .scan-action-right {
-    transform: none;
-    transition-delay: 100ms;
-  }
-}
-
-.scan-action-icon {
+.fan-action-icon {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 128rpx;
-  height: 128rpx;
-  border: 8rpx solid #ffffff;
+  width: 104rpx;
+  height: 104rpx;
+  border: 6rpx solid #fff;
   border-radius: 50%;
   color: #165dff;
-  font-size: 32rpx;
+  font-size: 42rpx;
   background: #e8f3ff;
-  box-shadow: 0 8rpx 24rpx rgba(22, 93, 255, 0.14);
+  box-shadow: 0 8rpx 20rpx rgba(22, 93, 255, 0.16);
 }
 
-.scan-action-center .scan-action-icon {
-  color: #0fc6c2;
-  background: #e8fffb;
+.fan-action-workbench .fan-action-icon {
+  color: #fff;
+  background: #165dff;
 }
 
-.scan-action-right .scan-action-icon {
-  color: #165dff;
-  background: #e8f3ff;
-}
-
-.scan-action-label {
+.fan-action-label {
   margin-top: 6rpx;
-  color: currentColor;
-  font-size: 18rpx;
+  color: #fff;
+  font-size: 22rpx;
   font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  text-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.4);
+}
+
+.fan-action-scan {
+  left: 126rpx;
+  top: 220rpx;
+  transform: translateX(-50%) translate(174rpx, 150rpx) scale(0.55);
+}
+
+.fan-action-workbench {
+  left: 300rpx;
+  top: 140rpx;
+  transform: translateX(-50%) translate(0, 230rpx) scale(0.55);
+}
+
+.fan-action-approval {
+  left: 474rpx;
+  top: 220rpx;
+  transform: translateX(-50%) translate(-174rpx, 150rpx) scale(0.55);
 }
 </style>

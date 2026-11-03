@@ -1,8 +1,10 @@
 import type { IAuthLoginRes, IUserInfoRes } from '@/api/types/login'
 import { getUserInfo, login as loginApi, logout as logoutApi } from '@/api/login'
 import { encryptPassword } from '@/http/crypto'
+import { waitForTokenRefresh } from '@/http/http'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
+import { useMenuStore } from '@/store/menu'
 
 /** 客户端 ID：需在后端客户端配置中启用对应认证类型。 */
 const CLIENT_ID = import.meta.env.VITE_APP_CLIENT_ID
@@ -18,14 +20,19 @@ async function postLogin(res: IAuthLoginRes) {
     refreshToken: res.refreshToken,
     refreshExpiresIn: res.refreshExpiresIn,
   })
+  const sessionVersion = useTokenStore().sessionVersion
   try {
     await fetchUserInfo()
   }
   catch (error) {
-    useTokenStore().clear()
-    useUserStore().clearUserInfo()
+    if (useTokenStore().sessionVersion === sessionVersion) {
+      useTokenStore().clear()
+      useUserStore().clearUserInfo()
+    }
     throw error
   }
+  // 菜单失败只影响入口展示，不撤销已成功的登录。
+  void useMenuStore().load().catch(() => {})
 }
 
 /**
@@ -48,7 +55,10 @@ export async function loginByPassword(form: { username: string, password: string
 }
 
 export async function fetchUserInfo(): Promise<IUserInfoRes> {
+  const sessionVersion = useTokenStore().sessionVersion
   const res = await getUserInfo()
+  if (useTokenStore().sessionVersion !== sessionVersion)
+    throw new Error('登录状态已变更')
   const userInfo: IUserInfoRes = {
     userId: res.id,
     username: res.username,
@@ -74,16 +84,24 @@ export async function fetchUserInfo(): Promise<IUserInfoRes> {
 
 export async function logout() {
   const tokenStore = useTokenStore()
-  const refreshToken = tokenStore.tokenInfo.refreshToken
+  const sessionVersion = tokenStore.sessionVersion
+  const refreshSucceeded = await waitForTokenRefresh()
+  if (!refreshSucceeded) {
+    tokenStore.clear()
+    useUserStore().clearUserInfo()
+    return false
+  }
+  if (tokenStore.sessionVersion !== sessionVersion)
+    return null
+  const { refreshToken, token, tokenType } = tokenStore.tokenInfo
+  tokenStore.clear()
+  useUserStore().clearUserInfo()
   try {
-    if (refreshToken)
-      await logoutApi(refreshToken)
+    await logoutApi(refreshToken || undefined, `${tokenType || 'Bearer'} ${token}`)
+    return true
   }
   catch (error) {
     console.error('退出登录失败:', error)
-  }
-  finally {
-    tokenStore.clear()
-    useUserStore().clearUserInfo()
+    return false
   }
 }

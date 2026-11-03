@@ -166,6 +166,7 @@ async function handleSubmit() {
 
       <MaterialBottomBar>
         <wd-button
+          round
           block
           type="primary"
           :loading="submitting"

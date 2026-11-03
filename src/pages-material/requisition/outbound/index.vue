@@ -152,6 +152,7 @@ async function handleSubmit() {
       <MaterialBottomBar>
         <text class="flex-1 text-3 text-#86909c">共 {{ lines.length }} 种物资</text>
         <wd-button
+          round
           custom-class="flex-1"
           type="primary"
           :loading="submitting"

@@ -6,17 +6,22 @@ import { createHttpError, getResponseMessage, HttpErrorType, isSuccessResultCode
 import { refreshToken as refreshTokenApi } from '@/api/login'
 
 let refreshPromise: Promise<void> | undefined
+let refreshSessionVersion: number | undefined
 
 export async function refreshAccessToken() {
-  if (!refreshPromise) {
-    refreshPromise = (async () => {
-      const tokenStore = useTokenStore()
+  const tokenStore = useTokenStore()
+  const sessionVersion = tokenStore.sessionVersion
+  if (!refreshPromise || refreshSessionVersion !== sessionVersion) {
+    refreshSessionVersion = sessionVersion
+    const pending = (async () => {
       const refreshToken = tokenStore.tokenInfo.refreshToken
       const refreshExpiry = getRefreshTokenExpireTime()
       if (!refreshToken || !refreshExpiry || Date.now() >= refreshExpiry)
         throw new Error('刷新令牌已过期')
 
       const result = await refreshTokenApi(refreshToken)
+      if (tokenStore.sessionVersion !== sessionVersion)
+        throw new Error('登录状态已变更')
       if (!result.accessToken || !result.expiresIn)
         throw new Error('刷新响应缺少访问令牌')
       tokenStore.setTokenInfo({
@@ -25,22 +30,40 @@ export async function refreshAccessToken() {
         expiresIn: result.expiresIn,
         refreshToken: result.refreshToken || refreshToken,
         refreshExpiresIn: result.refreshExpiresIn ?? Math.max(0, Math.floor((refreshExpiry - Date.now()) / 1000)),
-      })
+      }, true)
     })().finally(() => {
-      refreshPromise = undefined
+      if (refreshPromise === pending) {
+        refreshPromise = undefined
+        refreshSessionVersion = undefined
+      }
     })
+    refreshPromise = pending
   }
   return refreshPromise
 }
 
+export async function waitForTokenRefresh() {
+  if (!refreshPromise)
+    return true
+  try {
+    await refreshPromise
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
 export async function ensureAccessToken() {
   const tokenStore = useTokenStore().updateNowTime()
+  const sessionVersion = tokenStore.sessionVersion
   if (!tokenStore.validToken && tokenStore.tokenInfo.token && tokenStore.tokenInfo.refreshToken) {
     try {
       await refreshAccessToken()
     }
     catch (error) {
-      clearExpiredSession()
+      if (tokenStore.sessionVersion === sessionVersion)
+        clearExpiredSession()
       throw createHttpError({
         type: HttpErrorType.Auth,
         message: error instanceof Error ? error.message : '登录已过期，请重新登录',
@@ -58,12 +81,20 @@ function clearExpiredSession() {
 
 export function http<T>(options: CustomRequestOptions) {
   if (!options.skipAuthRefresh) {
-    return ensureAccessToken().then(() => sendRequest<T>(options))
+    const sessionVersion = useTokenStore().sessionVersion
+    return ensureAccessToken().then(() => {
+      if (useTokenStore().sessionVersion !== sessionVersion)
+        throw createHttpError({ type: HttpErrorType.Auth, message: '登录状态已变更' })
+      return sendRequest<T>(options)
+    })
   }
   return sendRequest<T>(options)
 }
 
 function sendRequest<T>(options: CustomRequestOptions) {
+  const tokenStore = useTokenStore()
+  const sessionVersion = tokenStore.sessionVersion
+  const requestToken = tokenStore.tokenInfo.token
   // 1. 返回 Promise 对象
   return new Promise<T>((resolve, reject) => {
     uni.request({
@@ -83,12 +114,17 @@ function sendRequest<T>(options: CustomRequestOptions) {
         const isTokenExpired = res.statusCode === 401 || Number(code) === ResultEnum.Unauthorized
 
         if (isTokenExpired) {
-          if (!options.skipAuthRefresh && !options.authRefreshRetried && useTokenStore().tokenInfo.refreshToken) {
+          if (!options.skipAuthRefresh && tokenStore.sessionVersion !== sessionVersion) {
+            return reject(createHttpError({ type: HttpErrorType.Auth, code, statusCode: res.statusCode, message: '登录状态已变更', raw: res }))
+          }
+          if (!options.skipAuthRefresh && !options.authRefreshRetried && tokenStore.tokenInfo.refreshToken) {
             try {
-              await refreshAccessToken()
+              if (requestToken === tokenStore.tokenInfo.token)
+                await refreshAccessToken()
             }
             catch {
-              clearExpiredSession()
+              if (tokenStore.sessionVersion === sessionVersion)
+                clearExpiredSession()
               return reject(createHttpError({
                 type: HttpErrorType.Auth,
                 code,
@@ -98,6 +134,8 @@ function sendRequest<T>(options: CustomRequestOptions) {
                 raw: res,
               }))
             }
+            if (tokenStore.sessionVersion !== sessionVersion)
+              return reject(createHttpError({ type: HttpErrorType.Auth, code, statusCode: res.statusCode, message: '登录状态已变更', raw: res }))
             return http<T>({ ...options, authRefreshRetried: true }).then(resolve, reject)
           }
 

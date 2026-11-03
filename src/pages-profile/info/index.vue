@@ -143,6 +143,8 @@ async function savePassword() {
       </view>
 
       <wd-button
+
+        round
         block
         type="primary"
         class="mt-6"
@@ -173,6 +175,7 @@ async function savePassword() {
         <wd-input v-model="password.confirm" show-password placeholder="请再次输入新密码" />
       </view>
       <wd-button
+        round
 
         plain block
         class="mt-4"

@@ -171,6 +171,7 @@ function goReturn() {
       <MaterialBottomBar>
         <wd-button
           v-if="order.status === 'pending'"
+          round
 
           plain block
           type="danger"
@@ -181,6 +182,7 @@ function goReturn() {
         </wd-button>
         <wd-button
           v-if="order.status === 'approved'"
+          round
           block
           type="primary"
           @click="goOutbound"
@@ -189,6 +191,7 @@ function goReturn() {
         </wd-button>
         <wd-button
           v-if="order.status === 'outbound'"
+          round
           block
           type="primary"
           :loading="submitting"
@@ -199,6 +202,7 @@ function goReturn() {
         </wd-button>
         <wd-button
           v-if="order.status === 'signed'"
+          round
           block
           type="primary"
           @click="goReturn"

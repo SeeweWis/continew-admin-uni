@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
-import { navbarState, SCAN_PAGE, useNavbarRegistry } from '@/hooks/useNavbar'
-import { isPageTabbar } from '@/tabbar/store'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { navbarState, useNavbarRegistry } from '@/hooks/useNavbar'
+import { isPageTabbar, normalizeRoutePath } from '@/tabbar/store'
 import { currRoute, getAllPages } from '@/utils'
 
 const props = withDefaults(defineProps<{
@@ -31,17 +31,23 @@ const route = ref('')
 const { register, unregister } = useNavbarRegistry()
 
 function syncRoute() {
-  route.value = currRoute().path
+  route.value = normalizeRoutePath(currRoute().path)
+}
+
+function syncRouteFromEvent(path?: string) {
+  route.value = normalizeRoutePath(path || currRoute().path)
 }
 
 onMounted(() => {
   syncRoute()
+  uni.$on('app:route-change', syncRouteFromEvent)
   // 页面级实例：注册路由，让全局实例对本页隐藏
   if (!props.global) {
     register(route.value)
   }
 })
 onUnmounted(() => {
+  uni.$off('app:route-change', syncRouteFromEvent)
   if (!props.global) {
     unregister(route.value)
   }
@@ -49,7 +55,7 @@ onUnmounted(() => {
 onShow(syncRoute)
 
 const visible = computed(() => {
-  if (!route.value || route.value === SCAN_PAGE) {
+  if (!route.value) {
     return false
   }
   if (props.global && navbarState.customRoutes.has(route.value)) {
@@ -69,11 +75,10 @@ const arrowVisible = computed(() => {
   if (props.leftArrow !== undefined) {
     return props.leftArrow
   }
-  // 非 Tab 页（二级页面）显示返回箭头
   return !isPageTabbar(route.value)
 })
 
-/** 返回：有上级页面则返回上一页，否则回工作台 */
+/** 返回：有上级页面则返回上一页，否则回首页 */
 function handleBack() {
   if (getCurrentPages().length > 1) {
     uni.navigateBack()

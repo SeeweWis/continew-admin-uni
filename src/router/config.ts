@@ -21,10 +21,13 @@ export const EXCLUDE_LOGIN_PATH_LIST = [
 
 /**
  * 需要有效登录态的路由前缀：业务分包页面
- * 主包页面（工作台/扫码/我的）为公共页不拦截；未登录或 token 过期时唤起登录弹窗并阻止跳转
+ * 工作台、审批中心和消息页需要登录；扫码和个人中心保持公共页。
+ * 未登录或 token 过期时唤起登录弹窗并阻止跳转。
  */
 export const NEED_LOGIN_PATH_PREFIXES = [
-  '/pages-work',
+  '/pages/message',
+  '/pages-workbench',
+  '/pages-approval',
   '/pages-material',
   '/pages-emergency',
   '/pages-training',

@@ -1,13 +1,18 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import type { MessageItem } from '@/api/types/message'
+import type { MenuNode } from '@/store/menu'
+import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
-import type { ModuleMenuItem } from '@/modules/types'
-import { getVisibleWorkbenchMenus } from '@/modules/registry'
+import { computed, ref, watch } from 'vue'
+import { fetchGetMessagePage, fetchGetMessageUnread } from '@/api/message'
 import { usePageRefresh } from '@/hooks/usePageRefresh'
+import { getMiniMenuIcon } from '@/modules/menu-config'
 import { fetchUserInfo } from '@/services/auth'
 import { useUserStore } from '@/store'
+import { useMenuStore } from '@/store/menu'
 import { useSiteConfigStore } from '@/store/site'
 import { useTokenStore } from '@/store/token'
+import { openLoginPopup } from '@/utils/loginPopup'
 
 defineOptions({
   name: 'Home',
@@ -23,199 +28,181 @@ definePage({
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
 const siteStore = useSiteConfigStore()
+const menuStore = useMenuStore()
 const { userInfo } = storeToRefs(userStore)
 const { siteTitle } = storeToRefs(siteStore)
+const { rootMenus, status: menuStatus } = storeToRefs(menuStore)
 const displayName = computed(() => userInfo.value.nickname || userInfo.value.username || '用户')
+const recentMessages = ref<MessageItem[]>([])
+const unreadCount = ref(0)
+const messageStatus = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
+let messageRequestId = 0
 
-// 下拉刷新：重新拉取当前登录用户信息（未登录时忽略）
-usePageRefresh(async () => {
-  if (!tokenStore.updateNowTime().hasLogin) {
-    return
+watch(() => tokenStore.tokenInfo.token, (token) => {
+  messageRequestId++
+  recentMessages.value = []
+  unreadCount.value = 0
+  messageStatus.value = 'idle'
+  if (token) {
+    void menuStore.load().catch(() => {})
+    void loadMessages()
   }
-  await fetchUserInfo()
 })
 
-const quickActions = computed(() => getVisibleWorkbenchMenus({
-  roles: userInfo.value.roles,
-  permissions: userInfo.value.permissions,
-}))
-
-const featureItems = [
-  { type: '路由', title: '约定式路由与分包', meta: '页面即路由，按需加载模块', tone: 'blue' },
-  { type: '请求', title: '统一请求与鉴权', meta: '拦截器、Token 与错误归一', tone: 'amber' },
-  { type: '跨端', title: '多端构建能力', meta: 'H5 · 微信小程序 · App', tone: 'teal' },
-]
-
-const recentRecords = [
-  { type: '框架', title: 'Vue 3 + TypeScript', meta: '组合式 API · 类型安全', tone: 'blue' },
-  { type: '样式', title: 'UnoCSS + Wot UI', meta: '原子化样式 · 跨端组件', tone: 'green' },
-  { type: '质量', title: 'ESLint + TypeScript', meta: '代码规范 · 类型检查', tone: 'red' },
-]
-
-const quickToneClasses: Record<string, string> = {
-  blue: 'text-#165DFF bg-#E8F3FF',
-  teal: 'text-#0FC6C2 bg-#E8FFFB',
-  red: 'text-#F53F3F bg-#FFF1F0',
-  amber: 'text-#FF7D00 bg-#FFF3E8',
+async function loadMessages() {
+  const requestId = ++messageRequestId
+  messageStatus.value = 'loading'
+  try {
+    const [unread, page] = await Promise.all([
+      fetchGetMessageUnread(),
+      fetchGetMessagePage({ page: 1, size: 3 }),
+    ])
+    if (requestId !== messageRequestId || !tokenStore.updateNowTime().hasLogin)
+      return
+    unreadCount.value = unread.total
+    recentMessages.value = page.list
+    messageStatus.value = 'ready'
+  }
+  catch {
+    if (requestId === messageRequestId)
+      messageStatus.value = 'error'
+  }
 }
 
-const featureToneClasses: Record<string, string> = {
-  blue: 'text-#165DFF bg-#E8F3FF',
-  amber: 'text-#FF7D00 bg-#FFF3E8',
-  teal: 'text-#0FC6C2 bg-#E8FFFB',
+onShow(() => {
+  if (!tokenStore.updateNowTime().hasLogin)
+    return
+  void menuStore.load().catch(() => {})
+  void loadMessages()
+})
+
+usePageRefresh(async () => {
+  if (!tokenStore.updateNowTime().hasLogin)
+    return
+  await Promise.allSettled([fetchUserInfo(), menuStore.load(true), loadMessages()])
+})
+
+function openRoot(menu: MenuNode) {
+  menuStore.selectRoot(menu.name)
+  openPage('/pages-workbench/index')
 }
 
-const recentToneClasses: Record<string, string> = {
-  red: 'bg-#F53F3F',
-  green: 'bg-#00B42A',
-  blue: 'bg-#165DFF',
+function openPage(url: string) {
+  uni.navigateTo({ url })
 }
 
-function handleQuickAction(action: ModuleMenuItem) {
-  uni.navigateTo({ url: action.route })
+function openTab(url: string) {
+  uni.switchTab({ url })
 }
 </script>
 
 <template>
-  <view class="p-32rpx">
-    <view class="flex items-center justify-between">
-      <view>
-        <text class="block text-22rpx text-#86909C tracking-2rpx">{{ siteTitle }}</text>
-        <text class="mt-10rpx block text-42rpx text-#1D2129 font-bold leading-tight">欢迎使用，{{ displayName }}</text>
-        <text class="mt-10rpx block text-24rpx text-#4E5969">业务入口、扫码与个人中心统一在这里</text>
-      </view>
-      <view class="h-80rpx w-80rpx flex items-center justify-center border-6rpx border-#D6E4FF rounded-full bg-#165DFF text-30rpx text-white font-bold">
-        <text>{{ displayName.slice(0, 1) }}</text>
-      </view>
-    </view>
-
-    <view class="relative mt-30rpx overflow-hidden rounded-16px bg-#165DFF p-30rpx text-white shadow-[0_16rpx_36rpx_rgba(22,93,255,0.22)]">
-      <text class="pointer-events-none absolute z-0 text-330rpx text-white/5 font-bold leading-none -right-28rpx -top-78rpx -rotate-8">S</text>
-      <view class="relative z-1 flex items-start justify-between">
-        <view>
-          <text class="block text-22rpx text-white/60">服务状态</text>
-          <text class="mt-8rpx block text-32rpx font-bold">已连接后端</text>
+  <view class="min-h-screen bg-#F5F7FA p-32rpx">
+    <view class="rounded-24rpx bg-#165DFF p-36rpx text-white">
+      <view class="flex items-center justify-between">
+        <view class="min-w-0 flex-1">
+          <text class="block text-22rpx tracking-2rpx opacity-80">{{ siteTitle }}</text>
+          <text class="mt-12rpx block text-40rpx font-bold leading-tight">欢迎使用，{{ displayName }}</text>
+          <text class="mt-12rpx block text-23rpx opacity-85">常用服务与最新消息，尽在首页</text>
         </view>
-        <view class="flex items-center border border-white/18 rounded-full bg-white/8 px-14rpx py-8rpx text-22rpx text-white">
-          <view class="mr-8rpx h-12rpx w-12rpx rounded-full bg-#00B42A" />
-          <text>正常</text>
-        </view>
-      </view>
-      <view class="relative z-1 mt-32rpx flex border-t border-white/14 pt-24rpx">
-        <view class="flex-1 border-r border-white/14">
-          <text class="block text-center text-34rpx font-bold">Vue 3</text>
-          <text class="mt-6rpx block text-center text-20rpx text-white/60">核心框架</text>
-        </view>
-        <view class="flex-1 border-r border-white/14">
-          <text class="block text-center text-34rpx font-bold">TS</text>
-          <text class="mt-6rpx block text-center text-20rpx text-white/60">类型支持</text>
-        </view>
-        <view class="flex-1 border-r-0">
-          <text class="block text-center text-34rpx font-bold">Vite 5</text>
-          <text class="mt-6rpx block text-center text-20rpx text-white/60">构建工具</text>
+        <view class="ml-20rpx h-80rpx w-80rpx flex flex-none items-center justify-center rounded-full bg-white/20 text-30rpx font-bold">
+          {{ displayName.slice(0, 1) }}
         </view>
       </view>
     </view>
 
-    <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">业务模块</text>
-      <text class="text-22rpx text-#86909c">按角色与权限展示</text>
+    <view class="mt-32rpx rounded-20rpx bg-white p-28rpx">
+      <text class="block text-30rpx text-#1D2129 font-semibold">快捷入口</text>
+      <view class="mt-28rpx flex justify-around">
+        <view class="flex flex-col items-center" @click="openPage('/pages-scan/index')">
+          <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
+            <text class="i-carbon-qr-code" />
+          </view>
+          <text class="mt-12rpx text-24rpx text-#4E5969">扫码</text>
+        </view>
+        <view class="flex flex-col items-center" @click="openPage('/pages-workbench/index')">
+          <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
+            <text class="i-carbon-apps" />
+          </view>
+          <text class="mt-12rpx text-24rpx text-#4E5969">工作台</text>
+        </view>
+        <view class="flex flex-col items-center" @click="openTab('/pages/message/index')">
+          <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
+            <text class="i-carbon-notification" />
+          </view>
+          <text class="mt-12rpx text-24rpx text-#4E5969">消息</text>
+        </view>
+      </view>
     </view>
-    <view class="grid grid-cols-3 gap-16rpx">
-      <view
-        v-for="action in quickActions"
-        :key="action.key"
-        class="min-w-0 flex flex-col items-center border border-#f2f3f5 rounded-16px bg-white p-[18rpx_8rpx_16rpx] transition-transform duration-120 active:scale-97"
-        @click="handleQuickAction(action)"
-      >
+
+    <view class="mt-32rpx rounded-20rpx bg-white p-28rpx">
+      <view class="flex items-center justify-between">
+        <text class="text-30rpx text-#1D2129 font-semibold">我的功能</text>
+        <text class="text-22rpx text-#86909C">由后台权限决定</text>
+      </view>
+      <view v-if="!tokenStore.hasLogin" class="py-48rpx text-center">
+        <text class="mb-20rpx block text-25rpx text-#86909C">登录后查看可用功能</text>
+        <wd-button round size="small" @click="openLoginPopup">
+          登录
+        </wd-button>
+      </view>
+      <view v-else-if="menuStatus === 'loading' && !rootMenus.length" class="py-48rpx text-center text-25rpx text-#86909C">
+        正在加载功能…
+      </view>
+      <view v-else-if="menuStatus === 'error'" class="py-48rpx text-center">
+        <text class="mb-20rpx block text-25rpx text-#86909C">功能加载失败</text>
+        <wd-button round size="small" plain @click="menuStore.load(true).catch(() => {})">
+          重试
+        </wd-button>
+      </view>
+      <view v-else-if="!rootMenus.length" class="py-48rpx text-center text-25rpx text-#86909C">
+        暂无可用功能
+      </view>
+      <view v-else class="grid grid-cols-3 mt-28rpx gap-y-28rpx">
+        <view v-for="menu in rootMenus" :key="menu.name" class="flex flex-col items-center" @click="openRoot(menu)">
+          <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
+            <text :class="getMiniMenuIcon(menu.name)" />
+          </view>
+          <text class="mt-12rpx max-w-180rpx truncate text-24rpx text-#4E5969">{{ menu.title }}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="mt-32rpx rounded-20rpx bg-white p-28rpx">
+      <view class="flex items-center justify-between">
+        <view class="flex items-center">
+          <text class="text-30rpx text-#1D2129 font-semibold">最近消息</text>
+          <text v-if="unreadCount" class="ml-12rpx rounded-full bg-#FFF1F0 px-12rpx py-4rpx text-20rpx text-#F53F3F">{{ unreadCount }} 条未读</text>
+        </view>
+        <text class="text-23rpx text-#165DFF" @click="openTab('/pages/message/index')">查看全部 ›</text>
+      </view>
+      <view v-if="!tokenStore.hasLogin" class="py-48rpx text-center text-25rpx text-#86909C">
+        登录后查看消息
+      </view>
+      <view v-else-if="messageStatus === 'loading' && !recentMessages.length" class="py-48rpx text-center text-25rpx text-#86909C">
+        正在加载消息…
+      </view>
+      <view v-else-if="messageStatus === 'error'" class="py-48rpx text-center">
+        <text class="mb-20rpx block text-25rpx text-#86909C">消息加载失败</text>
+        <wd-button round size="small" plain @click="loadMessages">
+          重试
+        </wd-button>
+      </view>
+      <view v-else-if="!recentMessages.length" class="py-48rpx text-center text-25rpx text-#86909C">
+        暂无消息
+      </view>
+      <view v-else class="mt-12rpx">
         <view
-          class="h-66rpx w-66rpx flex items-center justify-center rounded-20rpx text-32rpx"
-          :class="quickToneClasses[action.tone]"
+          v-for="(item, index) in recentMessages"
+          :key="item.id"
+          class="flex items-center py-22rpx"
+          :class="index < recentMessages.length - 1 ? 'border-b border-#F2F3F5' : ''"
+          @click="openTab('/pages/message/index')"
         >
-          <text :class="action.icon" />
+          <view v-if="!item.isRead" class="mr-12rpx h-12rpx w-12rpx flex-none rounded-full bg-#F53F3F" />
+          <text class="min-w-0 flex-1 truncate text-25rpx text-#1D2129">{{ item.title }}</text>
+          <text class="ml-12rpx flex-none text-20rpx text-#86909C">{{ item.createTime || '' }}</text>
         </view>
-        <text class="mt-12rpx whitespace-nowrap text-22rpx text-#1d2129 font-semibold">{{ action.label }}</text>
-        <text class="mt-6rpx whitespace-nowrap text-17rpx text-#86909c">{{ action.hint }}</text>
-      </view>
-    </view>
-
-    <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">平台能力</text>
-      <text class="text-22rpx text-#86909c">统一底座</text>
-    </view>
-    <view class="overflow-hidden border border-#f2f3f5 rounded-16px bg-white">
-      <view
-        v-for="(item, index) in featureItems"
-        :key="item.title"
-        class="mx-24rpx min-h-110rpx flex items-center border-b border-#f2f3f5"
-        :class="{ 'border-b-0': index === featureItems.length - 1 }"
-      >
-        <view
-          class="mr-18rpx h-36rpx w-62rpx flex items-center justify-center rounded-10rpx text-20rpx"
-          :class="featureToneClasses[item.tone]"
-        >
-          {{ item.type }}
-        </view>
-        <view class="min-w-0 flex flex-1 flex-col">
-          <text class="overflow-hidden text-ellipsis whitespace-nowrap text-25rpx text-#1d2129 font-semibold">{{ item.title }}</text>
-          <text class="mt-8rpx text-20rpx text-#86909c">{{ item.meta }}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="grid grid-cols-2 mt-16rpx gap-16rpx">
-      <view class="min-w-0 border border-#f2f3f5 rounded-16px bg-white p-24rpx">
-        <view class="flex items-center justify-between">
-          <text class="text-24rpx text-#1d2129 font-semibold">开发体验</text>
-          <text class="text-18rpx text-#86909c">默认配置</text>
-        </view>
-        <view class="mt-22rpx text-44rpx text-#1d2129 font-bold">
-          100<text>%</text>
-        </view>
-        <text class="mt-2rpx block text-20rpx text-#86909c">基础能力已接入</text>
-        <view class="mt-20rpx h-10rpx overflow-hidden rounded-full bg-#f2f3f5">
-          <view class="h-full w-full rounded-full bg-primary" />
-        </view>
-        <view class="mt-10rpx flex justify-between text-18rpx text-#4e5969">
-          <text>页面与路由</text>
-          <text>请求与状态</text>
-        </view>
-      </view>
-
-      <view class="min-w-0 border border-#f2f3f5 rounded-16px bg-white p-24rpx">
-        <view class="flex items-center justify-between">
-          <text class="text-24rpx text-#1d2129 font-semibold">跨端支持</text>
-          <text class="text-18rpx text-#86909c">3 个目标</text>
-        </view>
-        <view class="mt-22rpx text-44rpx text-#1d2129 font-bold">
-          3<text>端</text>
-        </view>
-        <text class="mt-2rpx block text-20rpx text-#86909c">H5 / 小程序 / App</text>
-        <view class="mt-20rpx h-10rpx overflow-hidden rounded-full bg-#f2f3f5">
-          <view class="h-full w-full rounded-full bg-#0fc6c2" />
-        </view>
-        <text class="mt-10rpx block text-18rpx text-#4e5969">按需选择目标平台</text>
-      </view>
-    </view>
-
-    <view class="mx-4rpx mb-18rpx mt-36rpx flex items-center justify-between">
-      <text class="text-30rpx text-#1d2129 font-bold">使用提示</text>
-      <text class="text-22rpx text-#86909c">平台能力</text>
-    </view>
-    <view class="overflow-hidden border border-#f2f3f5 rounded-16px bg-white">
-      <view
-        v-for="(item, index) in recentRecords"
-        :key="item.title"
-        class="mx-24rpx min-h-108rpx flex items-center border-b border-#f2f3f5"
-        :class="{ 'border-b-0': index === recentRecords.length - 1 }"
-      >
-        <view class="mr-18rpx h-54rpx w-6rpx rounded-full" :class="recentToneClasses[item.tone]" />
-        <view class="min-w-0 flex flex-1 flex-col">
-          <text class="text-18rpx text-#86909c">{{ item.type }}</text>
-          <text class="mt-4rpx overflow-hidden text-ellipsis whitespace-nowrap text-24rpx text-#1d2129 font-semibold">{{ item.title }}</text>
-          <text class="mt-8rpx text-20rpx text-#86909c">{{ item.meta }}</text>
-        </view>
-        <text v-if="index === 0" class="mt--34rpx self-start text-18rpx text-#F53F3F">刚刚</text>
       </view>
     </view>
   </view>

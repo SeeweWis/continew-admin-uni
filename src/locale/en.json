@@ -1,6 +1,7 @@
 {
   "tabbar.home": "Home",
-  "tabbar.scan": "Scan",
+  "tabbar.dashboard": "Dashboard",
+  "tabbar.message": "Messages",
   "tabbar.about": "About Template",
   "tabbar.me": "Me",
   "tabbar.i18n": "I18n",

@@ -91,15 +91,19 @@ export default defineConfig(({ command, mode }) => {
         // pages 目录为 src/pages，分包目录不能配置在pages目录下！！
         // 是个数组，可以配置多个，但是不能为pages里面的目录！！
         subPackages: [
+          // 扫码取景页（非 TabBar）
+          'src/pages-scan',
           // 工作台：安全学习与审批入口
-          'src/pages-work',
+          'src/pages-workbench',
+          // 审批中心入口
+          'src/pages-approval',
           // 物资：领用、出库、归还与盘点
           'src/pages-material',
           // 应急：事件登记与点位
           'src/pages-emergency',
           // 培训：活动列表与签到
           'src/pages-training',
-          // 个人中心：信息、培训档案与消息设置
+          // 个人中心：信息与培训档案
           'src/pages-profile',
         ],
         dts: 'src/types/uni-pages.d.ts',

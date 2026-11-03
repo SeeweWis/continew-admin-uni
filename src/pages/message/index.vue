@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { MessageItem } from '@/api/types/message'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useToast } from '@wot-ui/ui'
 import { fetchGetMessageDetail, fetchGetMessagePage, fetchGetMessageUnread, fetchReadAllMessages } from '@/api/message'
 import { usePageRefresh } from '@/hooks/usePageRefresh'
@@ -22,7 +23,7 @@ async function fetchMessages(page: number, pageSize: number): Promise<MessageIte
   return result.list
 }
 
-const { list, loading, finished, refresh, loadMore } = useScroll<MessageItem>({
+const { list, loading, finished, error, refresh, loadMore } = useScroll<MessageItem>({
   fetchData: fetchMessages,
 })
 
@@ -42,6 +43,16 @@ onMounted(() => {
 })
 onUnmounted(() => {
   uni.$off('app:scrolltolower', loadMore)
+})
+
+let hasShown = false
+onShow(() => {
+  if (hasShown) {
+    if (!loading.value)
+      void refresh()
+    void loadUnread()
+  }
+  hasShown = true
 })
 
 usePageRefresh(async () => {
@@ -88,7 +99,7 @@ async function openMessage(item: MessageItem) {
           {{ unread }} 条未读
         </text>
       </view>
-      <wd-button size="small" plain :disabled="!unread" @click="handleReadAll">
+      <wd-button round size="small" plain :disabled="!unread" @click="handleReadAll">
         全部已读
       </wd-button>
     </view>
@@ -111,6 +122,15 @@ async function openMessage(item: MessageItem) {
       <wd-loadmore :state="loading ? 'loading' : 'finished'" finished-text="没有更多了" />
     </view>
 
+    <view v-else-if="loading" class="mt-20 text-center text-#86909C">
+      正在加载消息…
+    </view>
+    <view v-else-if="error" class="mt-20 text-center">
+      <text class="mb-20rpx block text-#86909C">加载失败</text>
+      <wd-button round size="small" plain @click="refresh">
+        重试
+      </wd-button>
+    </view>
     <wd-empty v-else-if="finished" class="mt-20" description="暂无消息" />
 
     <wd-popup v-model="detailVisible" position="bottom" custom-class="rounded-t-2xl">

@@ -82,7 +82,7 @@ defineExpose({ open })
       </scroll-view>
       <view class="flex items-center gap-3 border-t border-#f2f3f5 border-solid px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <text class="flex-1 text-3 text-#86909c">已选 {{ selectedIds.length }} 种物资</text>
-        <wd-button :disabled="!selectedIds.length" size="small" @click="handleConfirm">
+        <wd-button round :disabled="!selectedIds.length" size="small" @click="handleConfirm">
           确定
         </wd-button>
       </view>

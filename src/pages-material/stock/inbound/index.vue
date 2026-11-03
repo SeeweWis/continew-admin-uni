@@ -97,7 +97,7 @@ async function handleSubmit() {
     <view class="mt-3 rounded-lg bg-white p-4">
       <view class="flex items-center justify-between">
         <text class="text-4 text-#1d2129 font-medium">入库物资</text>
-        <wd-button size="small" plain @click="openPicker">
+        <wd-button round size="small" plain @click="openPicker">
           添加物资
         </wd-button>
       </view>
@@ -173,6 +173,7 @@ async function handleSubmit() {
     <MaterialBottomBar>
       <text class="flex-1 text-3 text-#86909c">共 {{ lines.length }} 种物资</text>
       <wd-button
+        round
         custom-class="flex-1"
         type="primary"
         :loading="submitting"

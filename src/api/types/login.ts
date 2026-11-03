@@ -30,6 +30,20 @@ export interface IAuthLoginRes {
 
 export type UserRole = string
 
+/** /auth/user/route 返回的当前用户目录、菜单树（按钮不在此接口中） */
+export interface IUserRoute {
+  id: string | number
+  parentId: string | number
+  name: string
+  title: string
+  type: 1 | 2
+  icon?: string
+  isExternal?: boolean
+  isHidden?: boolean
+  sort?: number
+  children?: IUserRoute[]
+}
+
 /** 后端 /auth/user/info 的 UserInfoResp */
 export interface IGetUserInfoRes {
   /** 后端 Long 雪花 ID，超出 JS 安全整数范围时由 Jackson 序列化为字符串 */

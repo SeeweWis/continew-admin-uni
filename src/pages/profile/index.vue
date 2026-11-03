@@ -59,7 +59,7 @@ const avatarUrl = computed(() => {
 const menus = [
   { label: '个人信息', hint: '查看与维护基础资料', icon: 'i-carbon-user-avatar', tone: 'blue', route: '/pages-profile/info/index' },
   { label: '培训记录', hint: '参训与学时归档', icon: 'i-carbon-education', tone: 'teal', route: '/pages-profile/training-record/index' },
-  { label: '消息中心', hint: '系统消息与公告', icon: 'i-carbon-notification', tone: 'amber', route: '/pages-profile/settings/message/index' },
+  { label: '消息中心', hint: '系统消息与公告', icon: 'i-carbon-notification', tone: 'amber', route: '/pages/message/index' },
 ]
 
 const menuToneClasses: Record<string, string> = {
@@ -74,7 +74,10 @@ function guardNavigate(route: string) {
     openLoginPopup()
     return
   }
-  uni.navigateTo({ url: route })
+  if (route === '/pages/message/index')
+    uni.switchTab({ url: route })
+  else
+    uni.navigateTo({ url: route })
 }
 
 async function handleLogout() {
@@ -82,15 +85,19 @@ async function handleLogout() {
     return
   }
   // 退出登录：注销后端会话并清空本地登录态与用户信息
-  await logout()
-  // 执行退出登录逻辑
-  toast.success('退出登录成功')
+  const result = await logout()
+  if (result === true)
+    toast.success('退出登录成功')
+  else if (result === false)
+    toast.show('本地已退出，服务端注销未完成')
 }
 </script>
 
 <template>
   <!-- 背景与最小高度由 App.ku.vue 全局壳统一控制 -->
   <view class="p-32rpx">
+    <wd-dialog />
+    <wd-toast />
     <!-- 用户卡片：未登录为登录引导态，已登录展示账号与基础资料 -->
     <view
       class="relative overflow-hidden border border-#f2f3f5 rounded-16px bg-white p-30rpx transition-transform duration-120 active:scale-99"
@@ -182,9 +189,10 @@ async function handleLogout() {
     <!-- 退出登录（仅登录态展示） -->
     <wd-button
       v-if="loggedIn"
+      round
       block
       custom-class="profile-logout"
-      custom-style="height:96rpx;margin-top:36rpx;border:none;background:#ffffff;color:#F53F3F;font-size:28rpx;font-weight:600;border-radius:16px;box-shadow:0 4rpx 12rpx rgba(0,0,0,0.04);"
+      custom-style="height:96rpx;margin-top:36rpx;border:none;background:#ffffff;color:#F53F3F;font-size:28rpx;font-weight:600;box-shadow:0 4rpx 12rpx rgba(0,0,0,0.04);"
       @click="handleLogout"
     >
       退出登录

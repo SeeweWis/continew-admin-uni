@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import FgLoginPopup from '@/components/fg-login-popup.vue'
 import FgNavbar from '@/components/fg-navbar/fg-navbar.vue'
 import FgTabbar from '@/tabbar/index.vue'
 import { navbarState, SCAN_PAGE } from '@/hooks/useNavbar'
 import { pageRefreshState } from '@/hooks/usePageRefresh'
-import { isPageTabbar } from './tabbar/store'
+import { isPageTabbar, normalizeRoutePath } from './tabbar/store'
 import { currRoute } from './utils'
 import { useSiteConfigStore } from '@/store/site'
 
@@ -15,9 +15,9 @@ const isCurrentPageTabbar = ref(true)
 /** 状态栏高度：仅导航栏隐藏的页面用它撑起顶部，内容从状态栏之下开始 */
 const statusBarHeight = ref(0)
 
-/** 与 fg-navbar 的全局显隐规则一致：扫码页与页面级自绘导航栏的路由不显示全局导航栏 */
+/** 页面级自绘导航栏的路由不显示全局导航栏 */
 const navbarVisible = computed(() => {
-  return !!routePath.value && routePath.value !== SCAN_PAGE && !navbarState.customRoutes.has(routePath.value)
+  return !!routePath.value && !navbarState.customRoutes.has(routePath.value)
 })
 
 /** 扫码页满屏摄像头，滚动区内不滚动 */
@@ -42,15 +42,26 @@ async function handleRefresh() {
   }
 }
 
-onShow(() => {
-  void siteConfigStore.load()
-  const { path } = currRoute()
-  routePath.value = path
+function syncRoute(path?: string) {
+  routePath.value = normalizeRoutePath(path || currRoute().path)
   const info = uni.getWindowInfo ? uni.getWindowInfo() : uni.getSystemInfoSync()
   statusBarHeight.value = info.statusBarHeight ?? 0
   // “蜡笔小开心”提到本地是 '/pages/work/index'，线上是 '/' 导致线上 tabbar 不见了
   // 所以这里需要判断一下，如果是 '/' 就当做首页，也要显示 tabbar
-  isCurrentPageTabbar.value = path === '/' ? true : isPageTabbar(path)
+  isCurrentPageTabbar.value = routePath.value === '/' ? true : isPageTabbar(routePath.value)
+}
+
+onMounted(() => {
+  uni.$on('app:route-change', syncRoute)
+})
+
+onUnmounted(() => {
+  uni.$off('app:route-change', syncRoute)
+})
+
+onShow(() => {
+  void siteConfigStore.load()
+  syncRoute()
 })
 
 /**

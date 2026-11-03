@@ -132,7 +132,7 @@ async function handleManualInput() {
       </text>
     </view>
 
-    <!-- 底部操作区（避开悬浮 tabbar） -->
+    <!-- 底部操作区（预留安全区及顶部导航栏的裁切空间） -->
     <view class="scan-controls absolute inset-x-0 flex items-start justify-center gap-120rpx">
       <!-- #ifdef MP-WEIXIN -->
       <view v-if="!cameraBlocked" class="w-120rpx center flex-col gap-12rpx" @click="flashOn = !flashOn">
@@ -230,7 +230,7 @@ async function handleManualInput() {
   }
 }
 
-// 底部操作区：悬浮 tabbar（安全区 + 56px 胶囊 + 间距）之上
+// 取景页不显示 TabBar；底部留白用于避开全局导航栏占用的可视高度
 .scan-controls {
   bottom: calc(env(safe-area-inset-bottom) + 190rpx);
 }

@@ -10,8 +10,8 @@ export const navbarState = reactive({
   customRoutes: new Set<string>(),
 })
 
-/** 扫码页：满屏摄像头，全局导航栏隐藏、滚动区关闭滚动 */
-export const SCAN_PAGE = '/pages/scan/index'
+/** 扫码页：满屏摄像头，滚动区关闭滚动 */
+export const SCAN_PAGE = '/pages-scan/index'
 
 export function useNavbarRegistry() {
   function register(path: string) {

@@ -51,12 +51,15 @@ export const navigateToInterceptor = {
     // 业务分包页面需要有效登录态，未登录或 token 过期时唤起登录弹窗并阻止本次路由；
     // 运行中 token 被服务端判定失效的场景由 http 层 401 分支兜底（清登录态 + 唤起弹窗）
     if (tokenStore.updateNowTime().hasLogin) {
+      // 导航拦截器先于页面生命周期执行，主动通知全局页面壳同步目标路由。
+      uni.$emit('app:route-change', path)
       return true
     }
     if (isNeedLoginPath(path)) {
       openLoginPopup()
       return false
     }
+    uni.$emit('app:route-change', path)
     return true
   },
 }
