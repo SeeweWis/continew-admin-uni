@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ICommonFileUploadRes } from '@/api/types/oss'
-import { computed, ref } from 'vue'
+import { computed, getCurrentInstance, ref } from 'vue'
 import { useToast } from '@wot-ui/ui'
 import { uploadCommonFile } from '@/services/upload'
 
@@ -29,7 +29,8 @@ const emit = defineEmits<{
 }>()
 
 // 轻提示（必须在 setup 顶层调用，内部依赖 inject）
-const toast = useToast()
+const toastSelector = `upload-${getCurrentInstance()!.uid}`
+const toast = useToast(toastSelector)
 
 /** 上传中的任务（缩略图 + 进度条展示） */
 interface UploadingItem {
@@ -103,7 +104,7 @@ function handlePreview(index: number) {
 
 <template>
   <view class="flex flex-wrap gap-16rpx">
-    <wd-toast />
+    <wd-toast :selector="toastSelector" />
     <!-- 已上传：缩略图 + 删除 + 点击预览 -->
     <view v-for="(item, index) in modelValue" :key="item.id" class="relative h-160rpx w-160rpx">
       <image :src="item.url" mode="aspectFill" class="h-full w-full rounded-12rpx" @click="handlePreview(index)" />
@@ -112,7 +113,7 @@ function handlePreview(index: number) {
         class="absolute h-36rpx w-36rpx flex items-center justify-center rounded-full bg-#F53F3F -right-10rpx -top-10rpx"
         @click.stop="handleRemove(index)"
       >
-        <text class="i-carbon-close text-22rpx text-white" />
+        <view class="mdi mdi-close text-22rpx text-white" />
       </view>
     </view>
 
@@ -135,7 +136,7 @@ function handlePreview(index: number) {
       class="h-160rpx w-160rpx flex flex-col items-center justify-center gap-6rpx border-2rpx border-#C9CDD4 rounded-12rpx border-dashed transition-opacity active:opacity-60"
       @click="handleChoose"
     >
-      <text class="i-carbon-add text-44rpx text-#86909C" />
+      <view class="mdi mdi-plus text-44rpx text-#86909C" />
       <text class="text-20rpx text-#86909C">上传</text>
     </view>
   </view>

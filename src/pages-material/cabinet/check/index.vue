@@ -12,7 +12,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('cabinet-check')
 const confirmDialog = useConfirmDialog()
 
 const lines = ref(CABINET_CHECK_LINES.map(line => ({ ...line })))
@@ -62,6 +62,7 @@ async function handleSubmit() {
 
 <template>
   <view class="page-material-cabinet-check min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="cabinet-check" />
     <!-- 柜体信息 -->
     <view class="rounded-lg bg-white p-4">
       <view class="flex items-center justify-between">

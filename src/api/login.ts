@@ -28,5 +28,5 @@ export function refreshToken(refreshToken: string) {
 
 /** 退出登录 */
 export function logout(refreshToken: string | undefined, authorization: string) {
-  return http.post<void>('/auth/logout', refreshToken ? { refreshToken } : undefined, undefined, { Authorization: authorization }, { skipAuthRefresh: true })
+  return http.post<void>('/auth/logout', refreshToken ? { refreshToken } : undefined, undefined, { Authorization: authorization }, { skipAuthRefresh: true, hideErrorToast: true })
 }

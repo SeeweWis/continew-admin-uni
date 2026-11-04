@@ -11,7 +11,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('stocktake')
 const confirmDialog = useConfirmDialog()
 
 const lines = ref(STOCKTAKE_LINES.map(line => ({ ...line })))
@@ -45,6 +45,7 @@ async function handleSubmit() {
 
 <template>
   <view class="page-material-stock-stocktake min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="stocktake" />
     <wd-notice-bar text="逐项清点后填写实盘数，系统自动计算账实差异" />
 
     <!-- 盘点任务 -->

@@ -13,7 +13,7 @@ void siteConfigStore.load()
 
 const { state, close } = useLoginPopup()
 // 轻提示（必须在 setup 顶层调用，内部依赖 inject）
-const toast = useToast()
+const toast = useToast('login-popup')
 
 /** 登录方式切换（wd-tabs 以 name 回写）：wechat-微信登录 account-账号登录 */
 const activeTab = ref<'wechat' | 'account'>('wechat')
@@ -43,9 +43,9 @@ watch(activeTab, (tab) => {
 
 /** 品牌价值点（纯展示） */
 const features = [
-  { icon: 'i-carbon-application', label: '页面示例' },
-  { icon: 'i-carbon-document-view', label: '组件能力' },
-  { icon: 'i-carbon-education', label: '多端运行' },
+  { icon: 'mdi mdi-application-outline', label: '页面示例' },
+  { icon: 'mdi mdi-file-document-outline', label: '组件能力' },
+  { icon: 'mdi mdi-school-outline', label: '多端运行' },
 ]
 
 /** 登录前统一校验：协议必须勾选 */
@@ -124,7 +124,7 @@ async function handleAccountLogin() {
 </script>
 
 <template>
-  <wd-toast />
+  <wd-toast selector="login-popup" />
   <wd-action-sheet v-model="state.visible" :close-on-click-modal="!loading" :z-index="2000" @close="close">
     <!-- 右上角关闭按钮：登录请求进行中不允许关闭 -->
     <template #close="{ close: onClose }">
@@ -136,7 +136,7 @@ async function handleAccountLogin() {
 
       <view class="login-toolbar">
         <view class="login-mark">
-          <text class="i-carbon-code text-38rpx text-white" />
+          <view class="mdi mdi-code-tags text-38rpx text-white" />
         </view>
         <view class="login-brand">
           <text class="login-eyebrow">uni-app 小程序开发模板</text>
@@ -156,7 +156,7 @@ async function handleAccountLogin() {
           class="login-trust-item"
           :class="{ 'login-trust-item-last': index === features.length - 1 }"
         >
-          <text :class="item.icon" class="login-trust-icon" />
+          <view :class="item.icon" class="login-trust-icon" />
           <text>{{ item.label }}</text>
         </view>
       </view>
@@ -181,7 +181,7 @@ async function handleAccountLogin() {
           @getphonenumber="handleWxLogin"
         >
           <view class="login-submit-content">
-            <text class="login-submit-icon i-carbon-logo-wechat" />
+            <view class="login-submit-icon mdi mdi-wechat" />
             <!-- #ifdef MP-WEIXIN -->
             <text>微信一键登录</text>
             <!-- #endif -->
@@ -195,7 +195,7 @@ async function handleAccountLogin() {
       <!-- 账号密码登录 -->
       <view v-else class="login-actions">
         <view class="login-field">
-          <text class="login-field-icon i-carbon-user-avatar" />
+          <view class="login-field-icon mdi mdi-account-circle-outline" />
           <wd-input
             v-model="username"
             placeholder="请输入账号"
@@ -204,7 +204,7 @@ async function handleAccountLogin() {
           />
         </view>
         <view class="login-field login-field-password">
-          <text class="login-field-icon i-carbon-locked" />
+          <view class="login-field-icon mdi mdi-lock-outline" />
           <wd-input
             v-model="password"
             placeholder="请输入密码"
@@ -213,7 +213,7 @@ async function handleAccountLogin() {
           />
         </view>
         <view v-if="captcha?.isEnabled" class="login-field login-field-captcha">
-          <text class="login-field-icon i-carbon-password" />
+          <view class="login-field-icon mdi mdi-key-outline" />
           <wd-input
             v-model="captchaCode"
             placeholder="请输入验证码"
@@ -242,7 +242,7 @@ async function handleAccountLogin() {
 
       <view class="login-consent" @click="agreed = !agreed">
         <view class="login-checkbox" :class="{ 'login-checkbox-checked': agreed }">
-          <text v-if="agreed" class="i-carbon-checkmark text-20rpx text-white" />
+          <view v-if="agreed" class="mdi mdi-check text-20rpx text-white" />
         </view>
         <text class="login-consent-text">
           我已阅读并同意<text class="login-consent-link">《用户协议》</text>和<text class="login-consent-link">《隐私政策》</text>

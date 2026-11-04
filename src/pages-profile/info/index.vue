@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useToast } from '@wot-ui/ui'
-import { fetchUpdateProfileBasic, fetchUpdateProfilePassword } from '@/api/profile'
+import { fetchUpdateProfileAvatar, fetchUpdateProfileBasic, fetchUpdateProfilePassword } from '@/api/profile'
 import { fetchUserInfo } from '@/services/auth'
 import { useDict } from '@/hooks/useDict'
 import { useUserStore } from '@/store'
@@ -18,7 +18,7 @@ definePage({
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
 const { userInfo } = storeToRefs(userStore)
-const toast = useToast()
+const toast = useToast('profile-info')
 const { options: genderOptions } = useDict('gender_enum')
 
 const profile = reactive({
@@ -41,12 +41,50 @@ const password = reactive({
 
 const savingBasic = ref(false)
 const savingPassword = ref(false)
+const savingAvatar = ref(false)
 
 const displayName = computed(() => userInfo.value.nickname || userInfo.value.username || '未登录')
 const avatarUrl = computed(() => {
   const avatar = userInfo.value.avatar
   return avatar && avatar.startsWith('http') ? avatar : ''
 })
+
+// #ifdef MP-WEIXIN
+async function uploadAvatar(filePath: string) {
+  if (!filePath || savingAvatar.value)
+    return
+  savingAvatar.value = true
+  try {
+    const { avatar } = await fetchUpdateProfileAvatar(filePath)
+    if (!avatar)
+      throw new Error('服务器未返回头像地址')
+    userStore.setUserAvatar(avatar)
+    toast.success('头像已更新')
+  }
+  catch (error) {
+    if ((error as { type?: string })?.type !== 'auth')
+      toast.show(error instanceof Error ? error.message : (error as { message?: string })?.message || '头像上传失败')
+  }
+  finally {
+    savingAvatar.value = false
+  }
+}
+
+function chooseAlbumAvatar() {
+  if (savingAvatar.value)
+    return
+  uni.chooseMedia({
+    count: 1,
+    mediaType: ['image'],
+    sourceType: ['album'],
+    success: ({ tempFiles }) => void uploadAvatar(tempFiles[0]?.tempFilePath || ''),
+  })
+}
+
+function chooseWechatAvatar(event: { detail?: { avatarUrl?: string } }) {
+  void uploadAvatar(event.detail?.avatarUrl || '')
+}
+// #endif
 
 onShow(() => {
   if (tokenStore.updateNowTime().hasLogin)
@@ -104,7 +142,7 @@ async function savePassword() {
 
 <template>
   <view class="min-h-screen bg-#f2f3f5 p-3">
-    <wd-toast />
+    <wd-toast selector="profile-info" />
 
     <!-- 基础信息 -->
     <view class="rounded-16rpx bg-white p-4">
@@ -128,9 +166,26 @@ async function savePassword() {
         </view>
       </view>
 
+      <!-- #ifdef MP-WEIXIN -->
+      <view class="mt-4 flex flex-wrap gap-2">
+        <wd-button round size="small" plain :loading="savingAvatar" :disabled="savingAvatar" open-type="chooseAvatar" @chooseavatar="chooseWechatAvatar">
+          使用微信头像
+        </wd-button>
+        <wd-button round size="small" plain :disabled="savingAvatar" @click="chooseAlbumAvatar">
+          从相册上传
+        </wd-button>
+      </view>
+      <!-- #endif -->
+
       <view class="mt-5">
         <text class="mb-2 block text-3 text-#4e5969">昵称</text>
+        <!-- #ifdef MP-WEIXIN -->
+        <input v-model="profile.nickname" type="nickname" :maxlength="30" placeholder="输入昵称或选用微信昵称" class="h-88rpx border-b border-#E5E6EB text-30rpx text-#1D2129">
+        <text class="mt-2 block text-22rpx text-#86909C">点击输入框可选择微信昵称，保存后生效</text>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
         <wd-input v-model="profile.nickname" placeholder="请输入昵称" :maxlength="30" />
+        <!-- #endif -->
       </view>
 
       <view class="mt-4">
@@ -186,10 +241,6 @@ async function savePassword() {
         修改密码
       </wd-button>
     </view>
-
-    <text class="mt-3 block text-2 text-#86909c">
-      头像更新后端为 PATCH multipart，小程序端暂未接入
-    </text>
   </view>
 </template>
 

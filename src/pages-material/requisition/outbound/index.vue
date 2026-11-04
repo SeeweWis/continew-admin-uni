@@ -13,7 +13,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('requisition-outbound')
 const confirmDialog = useConfirmDialog()
 
 const order = ref<RequisitionOrder | null>(null)
@@ -79,6 +79,7 @@ async function handleSubmit() {
 
 <template>
   <view class="page-material-requisition-outbound min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="requisition-outbound" />
     <template v-if="order">
       <!-- 单据信息 -->
       <view class="rounded-lg bg-white p-4">

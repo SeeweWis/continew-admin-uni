@@ -17,7 +17,7 @@ const flashOn = ref(false)
 /** 识别锁：处理结果期间不再响应重复识别，返回本页时在 onShow 解锁 */
 const locked = ref(false)
 /** 轻提示（必须在 setup 顶层调用，内部依赖 inject） */
-const toast = useToast()
+const toast = useToast('scan')
 
 /** 任一异常时显示兜底提示层 */
 const cameraBlocked = computed(() => cameraError.value || authDenied.value)
@@ -106,14 +106,14 @@ async function handleManualInput() {
     />
     <!-- 摄像头不可用（未授权/故障）：引导开启授权或提示故障 -->
     <view v-if="cameraBlocked" class="absolute inset-0 center flex-col bg-black/85" @click="openSetting">
-      <text class="i-carbon-camera text-120rpx text-white/40" />
+      <view class="mdi mdi-camera-outline text-120rpx text-white/40" />
       <text class="mt-24rpx text-26rpx text-white/70">{{ authDenied ? '摄像头授权已拒绝，点击前往设置开启' : '摄像头不可用，请检查设备或重启小程序' }}</text>
     </view>
     <!-- #endif -->
 
     <!-- #ifndef MP-WEIXIN -->
     <view class="absolute inset-0 center flex-col from-#1f1f1f to-black bg-gradient-to-b">
-      <text class="i-carbon-qr-code text-140rpx text-white/30" />
+      <view class="mdi mdi-qrcode text-140rpx text-white/30" />
       <text class="mt-24rpx px-10 text-center text-26rpx text-white/60">当前端不支持摄像头取景，请使用微信小程序扫码或手动输入编码</text>
     </view>
     <!-- #endif -->
@@ -137,21 +137,21 @@ async function handleManualInput() {
       <!-- #ifdef MP-WEIXIN -->
       <view v-if="!cameraBlocked" class="w-120rpx center flex-col gap-12rpx" @click="flashOn = !flashOn">
         <view class="h-96rpx w-96rpx center rounded-full" :class="flashOn ? 'bg-#1890ff' : 'bg-white/15'">
-          <text class="i-carbon-flash text-44rpx" :class="flashOn ? 'text-white' : 'text-white/80'" />
+          <view class="mdi mdi-flash text-44rpx" :class="flashOn ? 'text-white' : 'text-white/80'" />
         </view>
         <text class="text-22rpx text-white/80">{{ flashOn ? '关闭手电' : '手电筒' }}</text>
       </view>
       <!-- #endif -->
       <view class="w-120rpx center flex-col gap-12rpx" @click="handleManualInput">
         <view class="h-96rpx w-96rpx center rounded-full bg-white/15">
-          <text class="i-carbon-keyboard text-44rpx text-white/80" />
+          <view class="mdi mdi-keyboard-outline text-44rpx text-white/80" />
         </view>
         <text class="text-22rpx text-white/80">手动输入</text>
       </view>
     </view>
 
     <!-- 轻提示与手动输入编码弹窗（useToast / usePromptDialog 依赖页面内的挂载点） -->
-    <wd-toast />
+    <wd-toast selector="scan" />
     <wd-dialog />
   </view>
 </template>

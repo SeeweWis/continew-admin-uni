@@ -130,4 +130,13 @@ describe('authentication session', () => {
     await exiting
     expect(useUserStore().userInfo.userId).toBe(-1)
   })
+
+  it('leaves logout failure notification to the caller', async () => {
+    signIn()
+    const exiting = logout()
+    await flush()
+    respond(requests[0], '500')
+    expect(await exiting).toBe(false)
+    expect(uni.showToast).not.toHaveBeenCalled()
+  })
 })

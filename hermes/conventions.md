@@ -21,7 +21,10 @@
 - 主题色用 `text-primary` / `bg-primary`(uno.config.ts theme 定义,含 wot-ui 联动变量)
 - 安全区用自定义规则:`p-safe` / `pt-safe` / `pb-safe`(刘海屏/底部横条)
 - 小字号:`text-2xs`(20rpx)/ `text-3xs`(18rpx)
-- **动态拼接的图标类名必须加入 uno.config.ts 的 safelist**,否则不生成样式
+- 业务图标统一使用 MDI 字体: `<view class="mdi mdi-account-outline text-24px text-primary" />`;字体继承文字大小和颜色。微信端使用 `view` 承载伪元素图标,避免静态空 `text` 不显示
+- 后台菜单的 `icon` 保留 `mdi:xxx` 格式,通过 `getMiniMenuIcon(menu.icon)` 转换;缺失、非法或不支持的图标显示文件夹
+- MDI 7.4.47 由 `vite-plugins/mdi-icons.ts` 全量生成名称样式并内嵌 WOFF2,动态菜单无需 UnoCSS safelist、网络请求或手工配置映射;更换字体版本后检查微信主包大小
+- **其他通过 UnoCSS 动态拼接的图标类名必须加入 uno.config.ts 的 safelist**,否则不生成样式
 - 本地 SVG 放 `src/static/my-icons/`,用 `i-my-icons-图标名` 调用
 
 ## 4. 状态管理

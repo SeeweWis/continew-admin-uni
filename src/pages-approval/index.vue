@@ -14,7 +14,7 @@ definePage({
 })
 
 const menuStore = useMenuStore()
-const toast = useToast()
+const toast = useToast('approval')
 const { rootMenus, status } = storeToRefs(menuStore)
 const approvalRoot = computed(() => rootMenus.value.find(menu => menu.name === 'Approval'))
 const approvalMenus = computed(() => {
@@ -52,7 +52,7 @@ function openMenu(menu: MenuNode) {
 
 <template>
   <view class="min-h-screen bg-#F5F7FA p-32rpx">
-    <wd-toast />
+    <wd-toast selector="approval" />
     <view class="rounded-20rpx bg-#165DFF p-32rpx text-white">
       <text class="block text-36rpx font-bold">审批中心</text>
       <text class="mt-10rpx block text-22rpx opacity-85">可用审批功能由后台权限决定</text>
@@ -72,22 +72,18 @@ function openMenu(menu: MenuNode) {
     <view v-else-if="!approvalMenus.length" class="mt-24rpx rounded-16rpx bg-white p-36rpx text-center text-#86909C">
       暂无可用审批功能
     </view>
-    <view v-else class="mt-24rpx overflow-hidden rounded-16rpx bg-white">
+    <view v-else class="grid grid-cols-2 mt-24rpx gap-12rpx rounded-16rpx bg-white px-12rpx py-16rpx">
       <view
-        v-for="(menu, index) in approvalMenus"
+        v-for="menu in approvalMenus"
         :key="menu.name"
-        class="mx-24rpx min-h-116rpx flex items-center"
-        :class="index < approvalMenus.length - 1 ? 'border-b border-#F2F3F5' : ''"
+        class="min-h-176rpx min-w-0 flex flex-col items-center justify-center gap-10rpx rounded-12rpx px-12rpx py-20rpx text-center active:bg-#F5F8FC"
         @click="openMenu(menu)"
       >
-        <view class="h-64rpx w-64rpx flex flex-none items-center justify-center rounded-16rpx bg-#E8F3FF text-30rpx text-#165DFF">
-          <text :class="getMiniMenuIcon(menu.name)" />
+        <view class="h-76rpx w-76rpx flex flex-none items-center justify-center rounded-20rpx bg-#E8F3FF text-36rpx text-#165DFF">
+          <view :class="getMiniMenuIcon(menu.icon)" />
         </view>
-        <view class="ml-20rpx min-w-0 flex-1">
-          <text class="block truncate text-27rpx text-#1D2129 font-semibold">{{ menu.title }}</text>
-          <text class="mt-4rpx block text-20rpx text-#86909C">{{ miniMenuPages[menu.name]?.hint ?? '暂未接入小程序' }}</text>
-        </view>
-        <text v-if="miniMenuPages[menu.name]" class="i-carbon-chevron-right text-28rpx text-#C9CDD4" />
+        <text class="max-w-full truncate text-25rpx text-#1D2129 font-semibold">{{ menu.title }}</text>
+        <text class="max-w-full truncate text-20rpx text-#86909C">{{ miniMenuPages[menu.name]?.hint ?? '暂未接入小程序' }}</text>
       </view>
     </view>
   </view>

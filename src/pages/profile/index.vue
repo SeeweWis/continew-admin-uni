@@ -23,7 +23,7 @@ const { userInfo } = storeToRefs(userStore)
 
 // 必须在 setup 顶层调用（内部依赖 inject）
 const confirmDialog = useConfirmDialog()
-const toast = useToast()
+const toast = useToast('profile')
 
 const loggedIn = computed(() => tokenStore.hasLogin)
 onShow(() => tokenStore.updateNowTime())
@@ -41,14 +41,13 @@ const roleLabels = computed(() => {
   const names = userInfo.value.roleNames?.length ? userInfo.value.roleNames : userInfo.value.roles
   return (names || []).filter(Boolean)
 })
-const visibleRoleLabels = computed(() => roleLabels.value.slice(0, 2))
-const extraRoleCount = computed(() => Math.max(0, roleLabels.value.length - 2))
+const extraRoleCount = computed(() => Math.max(0, roleLabels.value.length - 1))
 /** 卡片信息栅格：未绑定的字段给出占位，避免信息区留白 */
 const infoItems = computed(() => [
-  { label: '手机号', value: userInfo.value.phone || '未绑定', icon: 'i-carbon-mobile', tone: 'text-#165DFF bg-#E8F3FF' },
-  { label: '所属部门', value: userInfo.value.deptName || '未分配', icon: 'i-carbon-building', tone: 'text-#0FC6C2 bg-#E8FFFB' },
-  { label: '注册时间', value: userInfo.value.registrationDate || '—', icon: 'i-carbon-calendar', tone: 'text-#FF7D00 bg-#FFF3E8' },
-  { label: '邮箱', value: userInfo.value.email || '未绑定', icon: 'i-carbon-email', tone: 'text-#722ED1 bg-#F5F0FF' },
+  { label: '手机号', value: userInfo.value.phone || '未绑定' },
+  { label: '所属部门', value: userInfo.value.deptName || '未分配' },
+  { label: '注册时间', value: userInfo.value.registrationDate || '—' },
+  { label: '邮箱', value: userInfo.value.email || '未绑定' },
 ])
 /** 远程头像直接展示，本地默认图与空值回退为首字圆形 */
 const avatarUrl = computed(() => {
@@ -57,9 +56,9 @@ const avatarUrl = computed(() => {
 })
 
 const menus = [
-  { label: '个人信息', hint: '查看与维护基础资料', icon: 'i-carbon-user-avatar', tone: 'blue', route: '/pages-profile/info/index' },
-  { label: '培训记录', hint: '参训与学时归档', icon: 'i-carbon-education', tone: 'teal', route: '/pages-profile/training-record/index' },
-  { label: '消息中心', hint: '系统消息与公告', icon: 'i-carbon-notification', tone: 'amber', route: '/pages/message/index' },
+  { label: '个人信息', hint: '查看与维护基础资料', icon: 'mdi mdi-account-circle-outline', tone: 'blue', route: '/pages-profile/info/index' },
+  { label: '培训记录', hint: '参训与学时归档', icon: 'mdi mdi-school-outline', tone: 'teal', route: '/pages-profile/training-record/index' },
+  { label: '消息中心', hint: '系统消息与公告', icon: 'mdi mdi-bell-outline', tone: 'amber', route: '/pages/message/index' },
 ]
 
 const menuToneClasses: Record<string, string> = {
@@ -95,67 +94,52 @@ async function handleLogout() {
 
 <template>
   <!-- 背景与最小高度由 App.ku.vue 全局壳统一控制 -->
-  <view class="p-32rpx">
+  <view class="profile-page">
     <wd-dialog />
-    <wd-toast />
-    <!-- 用户卡片：未登录为登录引导态，已登录展示账号与基础资料 -->
+    <wd-toast selector="profile" />
+    <view class="profile-cover" />
     <view
-      class="relative overflow-hidden border border-#f2f3f5 rounded-16px bg-white p-30rpx transition-transform duration-120 active:scale-99"
+      class="profile-card relative transition-transform duration-120 active:scale-99"
       @click="guardNavigate('/pages-profile/info/index')"
     >
-      <text class="pointer-events-none absolute text-260rpx text-#165DFF/4 font-bold leading-none -right-20rpx -top-64rpx">
-        S
-      </text>
-      <view class="relative flex items-start">
-        <image
-          v-if="loggedIn && avatarUrl"
-          :src="avatarUrl"
-          class="h-110rpx w-110rpx flex-none border-4rpx border-#E8F3FF rounded-full bg-#E8F3FF"
-          mode="aspectFill"
-        />
-        <view
-          v-else
-          class="h-110rpx w-110rpx flex flex-none items-center justify-center rounded-full bg-#E8F3FF text-#165DFF"
-          :class="loggedIn ? 'text-40rpx font-bold' : 'text-48rpx'"
-        >
+      <view class="profile-card-top">
+        <image v-if="loggedIn && avatarUrl" :src="avatarUrl" class="profile-avatar" mode="aspectFill" />
+        <view v-else class="profile-avatar profile-avatar-fallback">
           <text v-if="loggedIn">{{ displayName.slice(0, 1) }}</text>
-          <text v-else class="i-carbon-user-avatar" />
+          <view v-else class="mdi mdi-account-circle-outline" />
         </view>
-        <view class="ml-24rpx min-w-0 flex-1">
-          <view class="flex flex-wrap items-center gap-10rpx">
-            <text class="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-34rpx text-#1D2129 font-bold">
-              {{ loggedIn ? displayName : '未登录' }}
-            </text>
-            <view
-              v-for="role in visibleRoleLabels"
-              :key="role"
-              class="flex-none rounded-8rpx bg-#E8F3FF px-12rpx py-4rpx text-20rpx text-#165DFF"
-            >
-              {{ role }}
+        <view class="profile-card-action">
+          <wd-button
+            round
+            size="small"
+            :custom-style="loggedIn
+              ? 'height:60rpx;padding:0 20rpx;border:none;background:#fff1eb;color:#a34222;font-size:21rpx;font-weight:600;'
+              : 'height:60rpx;padding:0 20rpx;border:none;background:#eaf2ff;color:#315cb3;font-size:21rpx;font-weight:600;'"
+            @click.stop="guardNavigate('/pages-profile/info/index')"
+          >
+            <view class="flex items-center gap-8rpx">
+              <view :class="loggedIn ? 'mdi mdi-pencil-outline' : 'mdi mdi-login'" />
+              {{ loggedIn ? '个人资料' : '立即登录' }}
             </view>
-            <text v-if="extraRoleCount" class="flex-none text-20rpx text-#86909C">+{{ extraRoleCount }}</text>
-          </view>
-          <text class="mt-10rpx block text-24rpx text-#86909C">
-            {{ loggedIn ? `账号 ${userInfo.username}` : '点击登录，使用模板能力' }}
-          </text>
+          </wd-button>
         </view>
-        <text v-if="loggedIn" class="i-carbon-chevron-right mt-4rpx flex-none text-28rpx text-#86909C" />
       </view>
-
-      <!-- 已登录：基础资料栅格 -->
-      <view v-if="loggedIn" class="relative mt-26rpx border-t border-#F2F3F5 pt-24rpx">
-        <view class="grid grid-cols-2 gap-x-16rpx gap-y-22rpx">
-          <view v-for="item in infoItems" :key="item.label" class="min-w-0 flex items-center gap-14rpx">
-            <view class="h-52rpx w-52rpx flex flex-none items-center justify-center rounded-14rpx text-26rpx" :class="item.tone">
-              <text :class="item.icon" />
-            </view>
-            <view class="min-w-0 flex-1">
-              <text class="block text-20rpx text-#86909C">{{ item.label }}</text>
-              <text class="mt-2rpx block w-full overflow-hidden text-ellipsis whitespace-nowrap text-24rpx text-#1D2129 font-semibold">
-                {{ item.value }}
-              </text>
-            </view>
+      <view class="profile-identity">
+        <view class="profile-name-row">
+          <text class="profile-name">{{ loggedIn ? displayName : '未登录' }}</text>
+          <view v-if="loggedIn && roleLabels.length" class="profile-role">
+            {{ roleLabels[0] }}
           </view>
+          <text v-if="loggedIn && extraRoleCount" class="profile-role-count">+{{ extraRoleCount }}</text>
+        </view>
+        <text class="profile-subtitle">
+          {{ loggedIn ? `账号 ${userInfo.username}` : '登录后查看个人资料与消息' }}
+        </text>
+      </view>
+      <view v-if="loggedIn" class="profile-stats">
+        <view v-for="item in infoItems" :key="item.label" class="profile-stat">
+          <text class="profile-stat-value">{{ item.value }}</text>
+          <text class="profile-stat-label">{{ item.label }}</text>
         </view>
       </view>
     </view>
@@ -176,13 +160,13 @@ async function handleLogout() {
           class="h-64rpx w-64rpx flex flex-none items-center justify-center rounded-16rpx text-30rpx"
           :class="menuToneClasses[item.tone]"
         >
-          <text :class="item.icon" />
+          <view :class="item.icon" />
         </view>
         <view class="ml-20rpx min-w-0 flex-1">
           <text class="block text-27rpx text-#1d2129 font-semibold">{{ item.label }}</text>
           <text class="mt-4rpx block text-20rpx text-#86909c">{{ item.hint }}</text>
         </view>
-        <text class="i-carbon-chevron-right flex-none text-28rpx text-#C9CDD4" />
+        <view class="mdi mdi-chevron-right flex-none text-28rpx text-#C9CDD4" />
       </view>
     </view>
 
@@ -203,3 +187,140 @@ async function handleLogout() {
     </text>
   </view>
 </template>
+
+<style scoped lang="scss">
+.profile-page {
+  padding: 0 32rpx 32rpx;
+}
+
+.profile-cover {
+  height: 300rpx;
+  margin: 0 -32rpx;
+  background: linear-gradient(to bottom, var(--wot-color-theme, #165dff) 0%, #fff 100%);
+}
+
+.profile-card {
+  margin: -166rpx 0 0;
+  padding: 0 28rpx 24rpx;
+  border: 1rpx solid rgb(21 35 48 / 5%);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14rpx 36rpx rgb(17 30 43 / 14%);
+}
+
+.profile-card-top {
+  position: relative;
+  height: 98rpx;
+}
+
+.profile-avatar {
+  position: absolute;
+  top: -58rpx;
+  left: 0;
+  width: 136rpx;
+  height: 136rpx;
+  box-sizing: border-box;
+  border: 6rpx solid #fff;
+  border-radius: 50%;
+  background: #e9eef4;
+  box-shadow: 0 8rpx 20rpx rgb(14 31 46 / 18%);
+}
+
+.profile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #54708a;
+  font-size: 48rpx;
+}
+
+.profile-card-action {
+  position: absolute;
+  top: 16rpx;
+  right: 0;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
+.profile-name-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.profile-name {
+  max-width: 68%;
+  overflow: hidden;
+  color: #202a34;
+  font-size: 32rpx;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-role {
+  flex: none;
+  max-width: 25%;
+  overflow: hidden;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  color: #315cb3;
+  background: #eaf2ff;
+  font-size: 19rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-role-count {
+  flex: none;
+  color: #697781;
+  font-size: 19rpx;
+}
+
+.profile-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #6e7a84;
+  font-size: 22rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf0f3;
+}
+
+.profile-stat {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 6rpx;
+}
+
+.profile-stat-value {
+  width: 100%;
+  overflow: hidden;
+  color: #263543;
+  font-size: 21rpx;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-stat-label {
+  margin-top: 6rpx;
+  color: #697781;
+  font-size: 18rpx;
+  text-align: center;
+}
+</style>

@@ -14,7 +14,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('stock-inbound')
 const confirmDialog = useConfirmDialog()
 const pickerRef = ref<InstanceType<typeof MaterialPicker>>()
 const photoPickerRef = ref<InstanceType<typeof MaterialPhotoPicker>>()
@@ -79,6 +79,7 @@ async function handleSubmit() {
 
 <template>
   <view class="page-material-stock-inbound min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="stock-inbound" />
     <wd-notice-bar text="扫码入库：可在扫码页扫描物资码自动带出入库信息（集成后开放），当前支持手动选择" />
 
     <!-- 入库类型 -->
@@ -117,7 +118,7 @@ async function handleSubmit() {
               </view>
               <text class="mt-1 block text-3 text-#86909c">{{ line.material.spec }} · 当前库存 {{ line.material.stock }}{{ line.material.unit }}</text>
             </view>
-            <text class="i-carbon-delete text-5 text-#86909c" @click="removeLine(index)" />
+            <view class="mdi mdi-delete-outline text-5 text-#86909c" @click="removeLine(index)" />
           </view>
           <view class="mt-3 flex items-center justify-between gap-3">
             <text class="flex-none text-3 text-#4e5969">入库数量</text>
@@ -135,7 +136,7 @@ async function handleSubmit() {
         </view>
       </view>
       <view v-else class="center flex-col gap-2 py-8">
-        <text class="i-carbon-box text-10 text-#c9cdd4" />
+        <view class="mdi mdi-package-variant-closed text-10 text-#c9cdd4" />
         <text class="text-3 text-#86909c">暂未添加物资，点击右上角按钮选择</text>
       </view>
     </view>

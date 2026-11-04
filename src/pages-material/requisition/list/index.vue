@@ -96,7 +96,7 @@ function summary(order: RequisitionOrder) {
         <text class="mt-1 block text-3 text-#86909c">{{ order.purpose }}</text>
         <view class="mt-3 flex items-center justify-between border-t border-#f2f3f5 border-solid pt-3">
           <text class="text-3 text-#86909c">{{ order.applyTime }}</text>
-          <text class="i-carbon-chevron-right text-3 text-#c9cdd4" />
+          <view class="mdi mdi-chevron-right text-3 text-#c9cdd4" />
         </view>
       </view>
 

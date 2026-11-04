@@ -7,6 +7,7 @@ import { useTokenStore } from './token'
 export interface MenuNode {
   name: string
   title: string
+  icon?: string
   type: 1 | 2
   children: MenuNode[]
 }
@@ -27,6 +28,7 @@ function normalizeMenuTree(data: unknown): MenuNode[] {
     .map(item => ({
       name: item.name,
       title: item.title,
+      icon: typeof item.icon === 'string' ? item.icon : undefined,
       type: item.type,
       children: normalizeMenuTree(item.children ?? []),
     }))

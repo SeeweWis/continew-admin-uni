@@ -13,7 +13,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('requisition-detail')
 const confirmDialog = useConfirmDialog()
 
 const order = ref<RequisitionOrder | null>(null)
@@ -96,6 +96,7 @@ function goReturn() {
 
 <template>
   <view class="page-material-requisition-detail min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="requisition-detail" />
     <template v-if="order">
       <!-- 状态与流程 -->
       <view class="rounded-lg bg-white p-4">

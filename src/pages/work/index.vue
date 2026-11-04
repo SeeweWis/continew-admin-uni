@@ -116,19 +116,19 @@ function openTab(url: string) {
       <view class="mt-28rpx flex justify-around">
         <view class="flex flex-col items-center" @click="openPage('/pages-scan/index')">
           <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
-            <text class="i-carbon-qr-code" />
+            <view class="mdi mdi-qrcode" />
           </view>
           <text class="mt-12rpx text-24rpx text-#4E5969">扫码</text>
         </view>
         <view class="flex flex-col items-center" @click="openPage('/pages-workbench/index')">
           <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
-            <text class="i-carbon-apps" />
+            <view class="mdi mdi-view-dashboard-outline" />
           </view>
           <text class="mt-12rpx text-24rpx text-#4E5969">工作台</text>
         </view>
         <view class="flex flex-col items-center" @click="openTab('/pages/message/index')">
           <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
-            <text class="i-carbon-notification" />
+            <view class="mdi mdi-bell-outline" />
           </view>
           <text class="mt-12rpx text-24rpx text-#4E5969">消息</text>
         </view>
@@ -161,7 +161,7 @@ function openTab(url: string) {
       <view v-else class="grid grid-cols-3 mt-28rpx gap-y-28rpx">
         <view v-for="menu in rootMenus" :key="menu.name" class="flex flex-col items-center" @click="openRoot(menu)">
           <view class="h-88rpx w-88rpx flex items-center justify-center rounded-22rpx bg-#E8F3FF text-40rpx text-#165DFF">
-            <text :class="getMiniMenuIcon(menu.name)" />
+            <view :class="getMiniMenuIcon(menu.icon)" />
           </view>
           <text class="mt-12rpx max-w-180rpx truncate text-24rpx text-#4E5969">{{ menu.title }}</text>
         </view>

@@ -55,7 +55,7 @@ defineExpose({ open })
     <view class="flex flex-col">
       <view class="flex items-center justify-between px-4 pt-4">
         <text class="text-4 text-#1d2129 font-medium">选择物资</text>
-        <text class="i-carbon-close text-5 text-#86909c" @click="visible = false" />
+        <view class="mdi mdi-close text-5 text-#86909c" @click="visible = false" />
       </view>
       <wd-search v-model="keyword" placeholder="搜索物资名称 / 编码" />
       <scroll-view scroll-y class="h-[50vh]">
@@ -65,9 +65,9 @@ defineExpose({ open })
           class="flex items-center gap-3 px-4 py-3 active:bg-#f2f3f5"
           @click="toggle(material)"
         >
-          <text
+          <view
             class="text-6"
-            :class="selectedIds.includes(String(material.id)) ? 'i-carbon-checkmark-filled text-[var(--wot-color-theme,#4d80f0)]' : 'i-carbon-circle-dash text-#c9cdd4'"
+            :class="selectedIds.includes(String(material.id)) ? 'mdi mdi-check-circle text-[var(--wot-color-theme,#4d80f0)]' : 'mdi mdi-circle-outline text-#c9cdd4'"
           />
           <view class="flex-1">
             <view class="flex items-center gap-2">

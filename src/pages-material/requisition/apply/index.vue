@@ -12,7 +12,7 @@ definePage({
   },
 })
 
-const toast = useToast()
+const toast = useToast('requisition-apply')
 const pickerRef = ref<InstanceType<typeof MaterialPicker>>()
 
 /** 已选物资行 */
@@ -76,6 +76,7 @@ async function handleSubmit() {
 
 <template>
   <view class="page-material-requisition-apply min-h-screen bg-#f2f3f5 px-4 pb-[140px] pt-3">
+    <wd-toast selector="requisition-apply" />
     <!-- 领用物资 -->
     <view class="rounded-lg bg-white p-4">
       <view class="flex items-center justify-between">
@@ -101,12 +102,12 @@ async function handleSubmit() {
           </view>
           <view class="ml-3 flex items-center gap-3">
             <wd-input-number v-model="line.quantity" :min="1" :max="line.material.stock" />
-            <text class="i-carbon-delete text-5 text-#86909c" @click="removeLine(index)" />
+            <view class="mdi mdi-delete-outline text-5 text-#86909c" @click="removeLine(index)" />
           </view>
         </view>
       </view>
       <view v-else class="center flex-col gap-2 py-8">
-        <text class="i-carbon-box text-10 text-#c9cdd4" />
+        <view class="mdi mdi-package-variant-closed text-10 text-#c9cdd4" />
         <text class="text-3 text-#86909c">暂未添加物资，点击右上角按钮选择</text>
       </view>
     </view>

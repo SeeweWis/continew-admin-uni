@@ -31,6 +31,7 @@ import openDevTools from './scripts/open-dev-tools'
 import vitePluginEruda from './scripts/vite-plugin-eruda'
 import { createCopyNativeResourcesPlugin } from './vite-plugins/copy-native-resources'
 import injectAppJsonPlugin from './vite-plugins/inject-app-json-plugin'
+import mdiIconsPlugin from './vite-plugins/mdi-icons'
 import syncManifestPlugin from './vite-plugins/sync-manifest-plugins'
 
 // https://vitejs.dev/config/
@@ -73,6 +74,7 @@ export default defineConfig(({ command, mode }) => {
     envDir: './env', // 自定义env目录
     base: VITE_APP_PUBLIC_BASE,
     plugins: [
+      mdiIconsPlugin(),
       // 构建后向 app.json 注入 lazyCodeLoading（uni 未投影 manifest 的该字段）
       injectAppJsonPlugin(),
       // UniXXX 需要在 Uni 之前引入

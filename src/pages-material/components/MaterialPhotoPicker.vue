@@ -51,7 +51,7 @@ defineExpose({ getPhotos })
     >
       <image :src="photo" mode="aspectFill" class="h-full w-full" />
       <view class="absolute right-0 top-0 h-44rpx w-44rpx center bg-black/50" @click.stop="remove(index)">
-        <text class="i-carbon-close text-3 text-white" />
+        <view class="mdi mdi-close text-3 text-white" />
       </view>
     </view>
     <view
@@ -59,7 +59,7 @@ defineExpose({ getPhotos })
       class="h-160rpx w-160rpx center flex-col gap-1 border border-#e5e6eb rounded-lg border-dashed bg-#f7f8fa active:bg-#eff0f1"
       @click="choose"
     >
-      <text class="i-carbon-camera text-8 text-#86909c" />
+      <view class="mdi mdi-camera-outline text-8 text-#86909c" />
       <text class="text-2 text-#86909c">{{ photos.length }}/{{ max }}</text>
     </view>
   </view>

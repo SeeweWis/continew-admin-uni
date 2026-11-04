@@ -40,16 +40,14 @@
   }
   ```
 
-- unocss 图标
+- MDI 字体图标（当前使用）
 
  ```js
   {
     // ... 其他配置
-    // 注意 unocss 图标需要如下处理：（二选一）
-    // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
-    // 2）配置到 unocss.config.ts 的 safelist 中
-    iconType: 'unocss',
-    icon: 'i-carbon-code',
+    // MDI 字体已全局内置，无需 UnoCSS safelist。
+    iconType: 'iconfont',
+    icon: 'mdi mdi-code-tags',
   }
   ```
 

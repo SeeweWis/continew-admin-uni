@@ -13,9 +13,9 @@ defineOptions({
 
 const menuOpen = ref(false)
 const quickActions = [
-  { key: 'scan', label: '扫码', icon: 'i-carbon-scan', route: '/pages-scan/index' },
-  { key: 'workbench', label: '工作台', icon: 'i-carbon-apps', route: '/pages-workbench/index' },
-  { key: 'approval', label: '审批中心', icon: 'i-carbon-task-approved', route: '/pages-approval/index' },
+  { key: 'scan', label: '扫码', icon: 'mdi mdi-qrcode-scan', route: '/pages-scan/index' },
+  { key: 'workbench', label: '工作台', icon: 'mdi mdi-view-dashboard-outline', route: '/pages-workbench/index' },
+  { key: 'approval', label: '审批中心', icon: 'mdi mdi-clipboard-check-outline', route: '/pages-approval/index' },
 ]
 
 function closeMenu() {
@@ -94,7 +94,7 @@ onHide(closeMenu)
         @click.stop="openAction(action.route)"
       >
         <view class="fan-action-icon">
-          <text :class="action.icon" />
+          <view :class="action.icon" />
         </view>
         <text class="fan-action-label">{{ action.label }}</text>
       </view>
@@ -119,7 +119,7 @@ onHide(closeMenu)
           <TabbarItem :item="item" :index="index + 2" class="relative px-1 text-center" />
         </view>
         <view class="bulge" :class="{ 'bulge-open': menuOpen }" aria-label="展开功能菜单" @click.stop="toggleMenu">
-          <text class="i-carbon-apps text-32px" />
+          <view class="mdi mdi-view-dashboard-outline text-32px" />
         </view>
       </view>
     </view>

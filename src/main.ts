@@ -6,6 +6,7 @@ import { routeInterceptor } from './router/interceptor'
 import store from './store'
 import '@/style/index.scss'
 import 'virtual:uno.css'
+import 'virtual:mdi.css'
 import i18n from './locale/index'
 
 export function createApp() {

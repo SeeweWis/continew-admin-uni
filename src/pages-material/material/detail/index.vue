@@ -12,10 +12,10 @@ definePage({
 
 /** 分类图标 */
 const CATEGORY_ICONS: Record<MaterialItem['category'], string> = {
-  消防器材: 'i-carbon-fire',
-  急救用品: 'i-carbon-health-cross',
-  防护用品: 'i-carbon-box',
-  应急工具: 'i-carbon-tools',
+  消防器材: 'mdi mdi-fire',
+  急救用品: 'mdi mdi-medical-bag',
+  防护用品: 'mdi mdi-package-variant-closed',
+  应急工具: 'mdi mdi-tools',
 }
 
 const material = ref<MaterialItem | null>(null)
@@ -60,7 +60,7 @@ function goOrder(orderId: string) {
       <view class="rounded-lg bg-white p-4">
         <view class="flex items-start gap-4">
           <view class="h-120rpx w-120rpx center flex-none rounded-lg bg-[var(--wot-color-theme,#4d80f0)]/10">
-            <text class="text-10 text-[var(--wot-color-theme,#4d80f0)]" :class="CATEGORY_ICONS[material.category]" />
+            <view class="text-10 text-[var(--wot-color-theme,#4d80f0)]" :class="CATEGORY_ICONS[material.category]" />
           </view>
           <view class="flex-1">
             <view class="flex items-center gap-2">
