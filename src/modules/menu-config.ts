@@ -5,8 +5,15 @@ export interface MiniMenuPage {
 }
 
 export const miniMenuPages: Record<string, MiniMenuPage> = {
-  // 当前 /auth/user/route 示例中的 System、Monitor、Approval 子菜单尚无对应小程序页面。
-  // 后续接入页面时，在这里以后台 name 为键配置小程序 route。
+  // 键 = sys_menu.name（client_type='XCX'），route = pages.config.ts 注册的页面路径
+  MiniApproval: { route: '/pages-approval/index' },
+  MiniCabinetCheck: { route: '/pages-material/cabinet/check/index' },
+  MiniEmergencyEvent: { route: '/pages-emergency/event/register/index' },
+  MiniEmergencyPoints: { route: '/pages-emergency/points/index/index' },
+  MiniMaterialInbound: { route: '/pages-material/stock/inbound/index' },
+  MiniMaterialRequisition: { route: '/pages-material/requisition/list/index' },
+  MiniMaterialStocktake: { route: '/pages-material/stock/stocktake/index' },
+  MiniTraining: { route: '/pages-training/activity/list/index' },
 }
 
 /** 图标由后台统一配置，缺失、非法或字体中不存在的名称显示文件夹。 */
