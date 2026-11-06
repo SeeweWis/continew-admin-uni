@@ -35,7 +35,7 @@ const menuSections = computed(() => rootMenus.value.map((root) => {
   }
   visit(root.children)
   return { name: root.name, title: root.title, menus }
-}).filter(section => section.menus.length))
+}))
 
 function reload() {
   void menuStore.load(true).catch(() => {})
@@ -104,7 +104,10 @@ function openMenu(menu: MenuNode) {
           </view>
           <text class="flex-none text-20rpx text-#86909C">{{ section.menus.length }}</text>
         </view>
-        <view class="grid grid-cols-4 gap-y-8rpx px-12rpx pb-16rpx pt-8rpx">
+        <view v-if="!section.menus.length" class="px-24rpx pb-28rpx text-22rpx text-#86909C">
+          暂无可用功能
+        </view>
+        <view v-else class="grid grid-cols-4 gap-y-8rpx px-12rpx pb-16rpx pt-8rpx">
           <view
             v-for="menu in section.menus"
             :key="menu.name"

@@ -140,7 +140,7 @@ onHide(closeMenu)
 // 中间悬浮按钮：真实尺寸圆钮（不缩放，边缘清晰平滑），白环与胶囊衔接，浮起带柔和投影
 .bulge {
   position: absolute;
-  top: 0;
+  top: 20rpx;
   left: 50%;
   transform: translate(-50%, -45%);
   display: flex;

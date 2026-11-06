@@ -6,7 +6,11 @@ export interface MiniMenuPage {
 
 export const miniMenuPages: Record<string, MiniMenuPage> = {
   // 键 = sys_menu.name（client_type='XCX'），route = pages.config.ts 注册的页面路径
+  MiniProfile: { route: '/pages/profile/index' },
+  MiniMessage: { route: '/pages/message/index' },
   MiniApproval: { route: '/pages-approval/index' },
+  MiniApprovalApplication: { route: '/pages-approval/list/index?kind=application' },
+  MiniApprovalTask: { route: '/pages-approval/list/index?kind=task' },
   MiniCabinetCheck: { route: '/pages-material/cabinet/check/index' },
   MiniEmergencyEvent: { route: '/pages-emergency/event/register/index' },
   MiniEmergencyPoints: { route: '/pages-emergency/points/index/index' },

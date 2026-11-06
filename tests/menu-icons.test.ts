@@ -1,10 +1,10 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMdiCss } from '../vite-plugins/mdi-icons'
 import { getUserRoutes } from '../src/api/login'
-import { getMiniMenuIcon } from '../src/modules/menu-config'
+import { getMiniMenuIcon, miniMenuPages } from '../src/modules/menu-config'
 import { useMenuStore } from '../src/store/menu'
 
 vi.mock('../src/api/login', () => ({ getUserRoutes: vi.fn() }))
@@ -15,6 +15,54 @@ beforeEach(() => {
 })
 
 describe('backend menu icons', () => {
+  it('maps granted base and approval menus to existing pages', async () => {
+    vi.mocked(getUserRoutes).mockResolvedValue([
+      {
+        id: '547888897925841100',
+        parentId: 0,
+        name: 'MiniBase',
+        title: '基础服务',
+        type: 1,
+        children: [
+          { id: '547888897925841101', parentId: '547888897925841100', name: 'MiniProfile', title: '个人中心', type: 2 },
+          { id: '547888897925841102', parentId: '547888897925841100', name: 'MiniMessage', title: '消息中心', type: 2 },
+        ],
+      },
+      {
+        id: '547888897925841103',
+        parentId: 0,
+        name: 'MiniBusiness',
+        title: '业务应用',
+        type: 1,
+        children: [{
+          id: '547888897925841105',
+          parentId: '547888897925841103',
+          name: 'MiniApprovalCenter',
+          title: '审批中心',
+          type: 1,
+          children: [
+            { id: '547888897925841106', parentId: '547888897925841105', name: 'MiniApprovalApplication', title: '我的申请', type: 2 },
+            { id: '547888897925841107', parentId: '547888897925841105', name: 'MiniApprovalTask', title: '我的待办', type: 2 },
+          ],
+        }],
+      },
+    ])
+    const store = useMenuStore()
+    await store.load()
+    expect(store.rootMenus.map(menu => menu.name)).toEqual(['MiniBase', 'MiniBusiness'])
+    expect(store.workbenchMenus.map(menu => miniMenuPages[menu.name]?.route)).toEqual([
+      '/pages/profile/index',
+      '/pages/message/index',
+    ])
+    for (const menu of store.workbenchMenus)
+      expect(existsSync(new URL(`../src${miniMenuPages[menu.name].route}.vue`, import.meta.url))).toBe(true)
+    store.selectRoot('MiniBusiness')
+    expect(store.workbenchMenus.map(menu => miniMenuPages[menu.name]?.route)).toEqual([
+      '/pages-approval/list/index?kind=application',
+      '/pages-approval/list/index?kind=task',
+    ])
+  })
+
   it('keeps backend icon fields at each menu level and uses them independently of route names', async () => {
     vi.mocked(getUserRoutes).mockResolvedValue([{
       id: 1,
